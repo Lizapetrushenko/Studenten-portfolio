@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 98" role="img" aria-labelledby="title desc">
+  <title id="title">Deltion College</title>
+  <desc id="desc">Logo van Deltion College</desc>
+  <rect width="300" height="61" fill="#302d73"/>
+  <text x="7" y="54" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="62" font-weight="900" letter-spacing="-5">deltion</text>
+  <path d="M244 0h28l-28 61h-28zM278 0h22v19l-20 42h-27z" fill="#ef7d19"/>
+  <text x="146" y="91" fill="#ef7d19" font-family="Arial, Helvetica, sans-serif" font-size="35" font-weight="900" letter-spacing="-2">college</text>
+</svg>

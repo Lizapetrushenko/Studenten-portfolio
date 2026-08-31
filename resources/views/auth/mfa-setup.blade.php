@@ -1,0 +1,3 @@
+<x-app-layout>
+    <div class="portal-shell"><section class="panel auth-card"><p class="deltion-kicker">EXTRA BEVEILIGING</p><h1 class="auth-title">MFA instellen</h1><p class="auth-subtitle">Scan deze QR-code met Google Authenticator en vul daarna de 6-cijferige code in.</p><div class="mfa-qr">{!! $qrCode !!}</div><p class="mfa-help">Lukt scannen niet? Gebruik dan deze geheime sleutel:</p><p class="mfa-secret">{{ $secret }}</p><form method="POST" action="{{ route('mfa.enable') }}" class="auth-form">@csrf<label>Authenticator-code<input class="auth-input" name="code" inputmode="numeric" maxlength="6" required></label><button class="auth-submit" type="submit">MFA inschakelen</button></form></section></div>
+</x-app-layout>
