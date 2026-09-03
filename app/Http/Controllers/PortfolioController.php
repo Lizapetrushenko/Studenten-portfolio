@@ -16,7 +16,39 @@ class PortfolioController extends Controller
         $portfolio = $request->user()->portfolios()->with('evidence')->first();
         $processes = $this->workProcesses();
 
-        return view('dashboard', compact('portfolio', 'processes'));
+        // Bereid data voor spin diagram
+        $spinChartData = $this->prepareSpinChartData($portfolio, $processes);
+
+        return view('dashboard', compact('portfolio', 'processes', 'spinChartData'));
+    }
+
+    private function prepareSpinChartData($portfolio, $processes)
+    {
+        if (!$portfolio) {
+            return null;
+        }
+
+        $processCodes = collect($processes)->pluck('code')->toArray();
+        $chartData = [];
+
+        foreach ($processCodes as $code) {
+            $processEvidence = $portfolio->evidence->filter(function ($item) use ($code) {
+                return strpos($item->work_process, $code) === 0;
+            });
+
+            $counts = [
+                'akkoord' => $processEvidence->where('status', 'akkoord')->count(),
+                'ingeleverd' => $processEvidence->where('status', 'ingeleverd')->count(),
+                'in proces' => $processEvidence->where('status', 'in proces')->count(),
+                'niet akkoord' => $processEvidence->where('status', 'niet akkoord')->count(),
+                'in-proces' => $processEvidence->where('status', 'in-proces')->count(),
+                'niet bekeken' => $processEvidence->where('status', 'niet bekeken')->count(),
+            ];
+
+            $chartData[$code] = $counts;
+        }
+
+        return json_encode($chartData);
     }
 
     public function store(Request $request): RedirectResponse
@@ -110,5 +142,23 @@ class PortfolioController extends Controller
         $evidence->delete();
 
         return back()->with('status', 'Bewijsstuk verwijderd.');
+    }
+
+    public function destroy(Request $request, Portfolio $portfolio): RedirectResponse
+    {
+        abort_unless($portfolio->user_id === $request->user()->id, 403);
+        
+        // Verwijder alle bewijsstukken en hun bestanden
+        foreach ($portfolio->evidence as $evidence) {
+            if ($evidence->file_path) {
+                Storage::disk('public')->delete($evidence->file_path);
+            }
+            $evidence->delete();
+        }
+        
+        // Verwijder portfolio
+        $portfolio->delete();
+
+        return redirect()->route('dashboard')->with('status', 'Portfolio verwijderd. Je kunt nu een nieuw portfolio aanmaken.');
     }
 }
