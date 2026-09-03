@@ -1,24 +1,63 @@
-<x-app-layout>
-    <x-slot name="header">
-            <div class="portal-header"><span class="eyebrow">STUDENTENPORTAAL</span><h1>Mijn portfolio</h1></div>
-    </x-slot>
-
-        <div class="portal-shell">
+<x-app-layout headerTitle="Mijn portfolio">
+    <div class="portal-shell">
             @if (session('status'))<div x-data="{ visible: true }" x-init="setTimeout(() => visible = false, 4000)" x-show="visible" x-transition.opacity class="notice flash-message">{{ session('status') }}</div>@endif
-            <section class="intro-grid">
-                <div><p class="eyebrow">JOUW BEWIJSSTUKKENPLAN</p><h2>Werkproces voor werkproces.</h2><p class="lead">Schrijf per nummer je idee van bewijsstuk en notitie op. Markeer daarna wat klaar, ingeleverd of akkoord is.</p></div>
-                <div class="profile-mark">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
-            </section>
+            
+            <div class="portfolio-sections">
+                <section class="panel portfolio-panel">
+                    <div class="section-title"><div><p class="eyebrow">01 / PROFIEL</p><h2>Portfolio-informatie</h2></div><span class="tag">{{ $portfolio ? 'Actief' : 'Start hier' }}</span></div>
+                    
+                    @if($portfolio)
+                        <!-- Portfolio Bestaande Info -->
+                        <div class="portfolio-info">
+                            <div class="info-item">
+                                <label class="info-label">Projectnaam:</label>
+                                <p class="info-value">{{ $portfolio->title }}</p>
+                            </div>
+                            <div class="info-item">
+                                <label class="info-label">Opleiding:</label>
+                                <p class="info-value">{{ $portfolio->study }}</p>
+                            </div>
+                            <div class="info-item">
+                                <label class="info-label">Korte introductie:</label>
+                                <p class="info-value">{{ $portfolio->bio }}</p>
+                            </div>
+                            <div class="portfolio-actions">
+                                <form method="POST" action="{{ route('portfolio.destroy', $portfolio) }}" style="display:inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="button delete-button" onclick="return confirm('Weet je zeker dat je dit portfolio wilt verwijderen? Je kunt dan een nieuw portfolio aanmaken.')">Portfolio verwijderen</button>
+                                </form>
+                            </div>
+                        </div>
+                    @else
+                        <!-- Portfolio Invulformulier -->
+                        <form method="POST" action="{{ route('portfolio.store') }}" class="form-grid portfolio-form">@csrf
+                            <label>Projectnaam<input name="title" value="{{ old('title') }}" placeholder="Schrijf zelf je projectnaam" required></label>
+                            <label>Opleiding<select name="study" required><option value="">Kies opleiding</option><option value="BOL" @selected(old('study') === 'BOL')>BOL</option><option value="BBL" @selected(old('study') === 'BBL')>BBL</option><option value="Flex" @selected(old('study') === 'Flex')>Flex</option></select></label>
+                            <label class="full">Korte introductie<textarea name="bio" rows="3" placeholder="Waar ben je trots op?">{{ old('bio') }}</textarea></label>
+                            <div class="full"><button class="button" type="submit">Portfolio opslaan</button></div>
+                        </form>
+                    @endif
+                </section>
 
-            <section class="panel portfolio-panel">
-                <div class="section-title"><div><p class="eyebrow">01 / PROFIEL</p><h2>Portfolio-informatie</h2></div><span class="tag">{{ $portfolio ? 'Actief' : 'Start hier' }}</span></div>
-                <form method="POST" action="{{ route('portfolio.store') }}" class="form-grid portfolio-form">@csrf
-                    <label>Projectnaam<input name="title" value="{{ old('title', $portfolio?->title) }}" placeholder="Schrijf zelf je projectnaam" required></label>
-                    <label>Opleiding<input name="study" value="{{ old('study', $portfolio?->study) }}" placeholder="Bijv. Software Development"></label>
-                    <label class="full">Korte introductie<textarea name="bio" rows="3" placeholder="Waar ben je trots op?">{{ old('bio', $portfolio?->bio) }}</textarea></label>
-                    <div class="full"><button class="button" type="submit">Portfolio opslaan</button></div>
-                </form>
-            </section>
+                @if($portfolio)
+                    <!-- Spin Diagram Widget Section -->
+                    <section class="panel spin-chart-panel">
+                        <div class="section-title"><div><p class="eyebrow">03 / OVERZICHT</p><h2>Van je werkzaamheden</h2></div></div>
+                        <div class="spin-chart-widget-small">
+                            <div class="spin-chart-container-small" data-chart-data="{{ htmlspecialchars($spinChartData) }}">
+                                <canvas id="spinChart"></canvas>
+                            </div>
+                            <div class="spin-legend-small">
+                                <div class="legend-item"><span class="legend-dot akkoord"></span><span class="legend-text">Akkoord</span></div>
+                                <div class="legend-item"><span class="legend-dot ingeleverd"></span><span class="legend-text">Ingeleverd</span></div>
+                                <div class="legend-item"><span class="legend-dot in-proces"></span><span class="legend-text">In proces</span></div>
+                                <div class="legend-item"><span class="legend-dot niet-akkoord"></span><span class="legend-text">Niet akkoord</span></div>
+                            </div>
+                        </div>
+                    </section>
+                @endif
+            </div>
 
             <section class="evidence-plan panel">
                 <div class="section-title"><div><p class="eyebrow">02 / BEWIJSSTUKKENPLAN</p><h2>Werkprocessen</h2></div><span class="count">{{ $portfolio?->evidence->count() ?? 0 }}</span></div>
@@ -53,3 +92,89 @@
             </section>
         </div>
 </x-app-layout>
+
+
+@if($portfolio && $spinChartData)
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.querySelector('.spin-chart-container-small');
+        const chartDataJson = container.getAttribute('data-chart-data');
+        const chartData = JSON.parse(chartDataJson);
+        const ctx = document.getElementById('spinChart')?.getContext('2d');
+        
+        if (!ctx) return;
+
+        const processCodes = Object.keys(chartData);
+        const statusColors = {
+            'akkoord': '#22c55e',
+            'ingeleverd': '#f97316',
+            'in proces': '#fbbf24',
+            'in-proces': '#fbbf24',
+            'niet akkoord': '#dc2626',
+            'idee': '#d87bd8'
+        };
+
+        const datasets = [];
+        const statuses = ['akkoord', 'ingeleverd', 'in proces', 'niet akkoord', 'idee'];
+
+        statuses.forEach(status => {
+            const data = processCodes.map(code => {
+                const count = chartData[code][status] || 0;
+                return count;
+            });
+
+            datasets.push({
+                label: status.charAt(0).toUpperCase() + status.slice(1),
+                data: data,
+                borderColor: statusColors[status],
+                backgroundColor: statusColors[status] + '33',
+                pointBackgroundColor: statusColors[status],
+                borderWidth: 1.5,
+                pointRadius: 2.5,
+                pointHoverRadius: 4,
+                tension: 0.3,
+                fill: true
+            });
+        });
+
+        const chart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: processCodes,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 5,
+                        ticks: {
+                            stepSize: 1,
+                            font: { size: 9 }
+                        },
+                        grid: {
+                            color: '#e5e7eb'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.r + ' bewijsstukken';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+@endif
