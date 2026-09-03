@@ -43,7 +43,7 @@
                 @if($portfolio)
                     <!-- Spin Diagram Widget Section -->
                     <section class="panel spin-chart-panel">
-                        <div class="section-title"><div><p class="eyebrow">03 / OVERZICHT</p><h2>Van je werkzaamheden</h2></div></div>
+                        <div class="section-title"><div><p class="eyebrow">02 / OVERZICHT</p><h2>Van je werkzaamheden</h2></div></div>
                         <div class="spin-chart-widget-small">
                             <div class="spin-chart-container-small" data-chart-data="{{ htmlspecialchars($spinChartData) }}">
                                 <canvas id="spinChart"></canvas>
@@ -60,7 +60,7 @@
             </div>
 
             <section class="evidence-plan panel">
-                <div class="section-title"><div><p class="eyebrow">02 / BEWIJSSTUKKENPLAN</p><h2>Werkprocessen</h2></div><span class="count">{{ $portfolio?->evidence->count() ?? 0 }}</span></div>
+                <div class="section-title"><div><p class="eyebrow">03 / BEWIJSSTUKKENPLAN</p><h2>Werkprocessen</h2></div><span class="count">{{ $portfolio?->evidence->count() ?? 0 }}</span></div>
                 <div class="status-legend"><span class="status-dot akkoord"></span> Akkoord <span class="status-dot ingeleverd"></span> Ingeleverd <span class="status-dot in-proces"></span> In proces <span class="status-dot niet-bekeken"></span> Niet bekeken <span class="status-dot niet-akkoord"></span> Niet akkoord</div>
                 @if($portfolio)
                     @foreach ($processes as $process)
