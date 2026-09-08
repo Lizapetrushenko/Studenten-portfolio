@@ -26,6 +26,7 @@ Route::post('/token-login', [TokenAuthController::class, 'authenticate'])->name(
 Route::post('/api/token-login', [TokenAuthController::class, 'login'])->name('token.api.login');
 Route::get('/mfa', [MfaController::class, 'challenge'])->name('mfa.challenge');
 Route::post('/mfa', [MfaController::class, 'verify'])->name('mfa.verify');
+Route::post('/register', [App\Http\Controllers\Auth\RegisteredUserController::class, 'store'])->name('register');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

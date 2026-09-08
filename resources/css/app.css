@@ -763,12 +763,11 @@ select:focus {
     font-weight: 700;
 }
 
-.token-link {
-    display: block;
+.register-link {
+    align-self: center;
     margin-top: 1rem;
     color: #302d73;
     font-size: .8rem;
-    text-align: center;
     text-decoration: underline;
 }
 
