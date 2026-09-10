@@ -27,6 +27,8 @@ Route::post('/api/token-login', [TokenAuthController::class, 'login'])->name('to
 Route::get('/mfa', [MfaController::class, 'challenge'])->name('mfa.challenge');
 Route::post('/mfa', [MfaController::class, 'verify'])->name('mfa.verify');
 Route::post('/register', [App\Http\Controllers\Auth\RegisteredUserController::class, 'store'])->name('register');
+Route::get('/auth/github/redirect', [SocialAuthController::class, 'redirectToGithub'])->name('github.redirect');
+Route::get('/auth/github/callback', [SocialAuthController::class, 'handleGithubCallback'])->name('github.callback');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

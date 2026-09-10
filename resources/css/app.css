@@ -276,6 +276,12 @@ body {
     color: #302d73;
 }
 
+.auth-card .github-button {
+    border-radius: 2rem;
+    color: #302d73;
+}
+
+.auth
 h1,
 h2,
 h3 {
