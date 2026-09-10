@@ -18,7 +18,7 @@ class PortfolioController extends Controller
         $processes = $portfolio?->workProcesses->map(fn (WorkProcess $process) => [
             'code' => (string) $process->number,
             'name' => $process->name,
-            'label' => $process->number . ' - ' . $process->name,
+            'label' => $process->number . '. ' . $process->name,
         ])->all() ?? [];
 
         $spinChartData = $this->prepareSpinChartData($portfolio, $processes);
