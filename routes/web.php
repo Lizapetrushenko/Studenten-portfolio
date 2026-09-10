@@ -35,6 +35,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/mfa/setup', [MfaController::class, 'enable'])->name('mfa.enable');
     Route::post('/portfolio', [PortfolioController::class, 'store'])->name('portfolio.store');
     Route::delete('/portfolio/{portfolio}', [PortfolioController::class, 'destroy'])->name('portfolio.destroy');
+    Route::post('/portfolio/work-processes', [PortfolioController::class, 'storeWorkProcess'])->name('work-process.store');
+    Route::patch('/portfolio/work-processes/{workProcess}', [PortfolioController::class, 'updateWorkProcess'])->name('work-process.update');
     Route::post('/portfolio/evidence', [PortfolioController::class, 'storeEvidence'])->name('evidence.store');
     Route::patch('/portfolio/evidence/{evidence}', [PortfolioController::class, 'updateEvidence'])->name('evidence.update');
     Route::delete('/portfolio/evidence/{evidence}/idea', [PortfolioController::class, 'destroyIdea'])->name('evidence.idea.destroy');

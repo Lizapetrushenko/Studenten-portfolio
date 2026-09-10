@@ -19,4 +19,9 @@ class Portfolio extends Model
     {
         return $this->hasMany(Evidence::class);
     }
+
+    public function workProcesses(): HasMany
+    {
+        return $this->hasMany(WorkProcess::class)->orderBy('number');
+    }
 }
