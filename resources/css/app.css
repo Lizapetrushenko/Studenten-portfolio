@@ -762,15 +762,23 @@ select:focus {
     margin-right: .5rem;
     font-weight: 700;
 }
-
-.register-link {
-    align-self: center;
-    margin-top: 1rem;
-    color: #302d73;
-    font-size: .8rem;
-    text-decoration: underline;
+.register-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
 }
 
+.register-link {
+    display: block;
+    width: 100%;
+    margin-top: 1rem;
+
+    color: #302d73;
+    font-size: .8rem;
+
+    text-align: center;
+    text-decoration: underline;
+}
 .mfa-secret {
     padding: 1rem;
     background: #f4f1eb;
@@ -978,5 +986,5 @@ select:focus {
 
     .auth-actions {
         align-items: flex-end;
-    }
+    }    
 }

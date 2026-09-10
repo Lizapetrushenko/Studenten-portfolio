@@ -40,5 +40,7 @@
     </form>
     <div class="oauth-divider"><span>of</span></div>
     <a class="google-button" href="{{ route('google.redirect') }}"><span>G</span> Doorgaan met Google</a>
-    <a class="register-link" href="{{ route('register') }}">Nog geen account?</a>
+    <div class="register-container">
+        <a class="register-link" href="{{ route('register') }}">Nog geen account?</a>
+    </div>
 </x-guest-layout>
