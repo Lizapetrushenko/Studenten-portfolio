@@ -49,10 +49,21 @@
             <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
                 Al een account?
             </a>
-
+        
             <x-primary-button class="ms-4">
                 Registreren
             </x-primary-button>
         </div>
     </form>
+
+    <div class="oauth-divider"><span>of</span></div>
+<a class="oauth-button google-button" href="{{ route('google.redirect') }}">
+    <img src="https://cdn.simpleicons.org/google" alt="Google">
+    <span>Doorgaan met Google</span>
+</a>
+
+<a class="oauth-button github-button" href="{{ route('github.redirect') }}">
+    <img src="https://cdn.simpleicons.org/github/ffffff" alt="GitHub">
+    <span>Doorgaan met GitHub</span>
+</a>
 </x-guest-layout>

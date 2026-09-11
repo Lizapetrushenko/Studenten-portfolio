@@ -15,6 +15,6 @@ class GoogleOAuthController extends Controller {
     }
 
     public function handleGoogleCallback(Request $request) {
-
+        
     }
 }

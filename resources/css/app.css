@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -269,16 +270,6 @@ body {
 
 .auth-card .oauth-divider {
     margin-top: 1.7rem;
-}
-
-.auth-card .google-button {
-    border-radius: 2rem;
-    color: #302d73;
-}
-
-.auth-card .github-button {
-    border-radius: 2rem;
-    color: #302d73;
 }
 
 .auth
@@ -754,20 +745,43 @@ select:focus {
     background: var(--line);
 }
 
-.google-button {
-    display: block;
-    text-align: center;
-    border: 1px solid var(--line);
-    color: var(--ink);
-    padding: .7rem;
+.oauth-button {
+    width: 100%;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .7rem;
+    padding: 0 1rem;
+    margin-top: .7rem;
+    border-radius: 1rem;
+    font-size: .9rem;
     font-weight: 600;
+    text-decoration: none;
 }
 
-.google-button span {
-    color: #4285f4;
-    margin-right: .5rem;
-    font-weight: 700;
+.oauth-button img {
+    display: block;
+    width: 20px;
+    height: 20px;
+    max-width: 20px;
+    max-height: 20px;
+    object-fit: contain;
+    flex-shrink: 0;
 }
+
+.google-button {
+    background: #fff;
+    color: #202124;
+    border: 1px solid #dadce0;
+}
+
+.github-button {
+    background: #24292f;
+    color: #fff;
+    border: 1px solid #24292f;
+}
+
 .register-container {
     width: 100%;
     display: flex;
@@ -778,13 +792,12 @@ select:focus {
     display: block;
     width: 100%;
     margin-top: 1rem;
-
     color: #302d73;
     font-size: .8rem;
-
     text-align: center;
     text-decoration: underline;
 }
+
 .mfa-secret {
     padding: 1rem;
     background: #f4f1eb;
@@ -895,7 +908,6 @@ select:focus {
     font-size: .8rem;
 }
 
-/*Phone + Tablet mode*/
 @media (max-width: 720px) {
 
     .portal-header,
@@ -992,5 +1004,5 @@ select:focus {
 
     .auth-actions {
         align-items: flex-end;
-    }    
+    }
 }

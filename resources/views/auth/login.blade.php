@@ -39,8 +39,16 @@
         </div>
     </form>
     <div class="oauth-divider"><span>of</span></div>
-    <a class="google-button" href="{{ route('google.redirect') }}"><span>G</span> Doorgaan met Google</a>
-    <a class="github-button" href="{{ route('github.redirect') }}"><span>GH</span> Doorgaan met GitHub</a>
+<a class="oauth-button google-button" href="{{ route('google.redirect') }}">
+    <img src="https://cdn.simpleicons.org/google" alt="Google">
+    <span>Doorgaan met Google</span>
+</a>
+
+<a class="oauth-button github-button" href="{{ route('github.redirect') }}">
+    <img src="https://cdn.simpleicons.org/github/ffffff" alt="GitHub">
+    <span>Doorgaan met GitHub</span>
+</a>
+
     <div class="register-container">
         <a class="register-link" href="{{ route('register') }}">Nog geen account?</a>
     </div>
