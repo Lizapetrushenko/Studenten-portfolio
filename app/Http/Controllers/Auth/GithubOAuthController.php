@@ -10,9 +10,10 @@ use Illuminate\View\View;
 
 class GithubOAuthController extends Controller {
     public function redirectToGithub() {
-        
 
-
+        return redirect()->away('
+        https://
+        ');
     
     }
 }

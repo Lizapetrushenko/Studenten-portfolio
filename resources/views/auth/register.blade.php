@@ -57,6 +57,7 @@
     </form>
 
     <div class="oauth-divider"><span>of</span></div>
+    <div class="oauth-buttons">
 <a class="oauth-button google-button" href="{{ route('google.redirect') }}">
     <img src="https://cdn.simpleicons.org/google" alt="Google">
     <span>Doorgaan met Google</span>
@@ -66,4 +67,5 @@
     <img src="https://cdn.simpleicons.org/github/ffffff" alt="GitHub">
     <span>Doorgaan met GitHub</span>
 </a>
+</div>
 </x-guest-layout>
