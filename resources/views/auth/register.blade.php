@@ -59,12 +59,12 @@
     <div class="oauth-divider"><span>of</span></div>
     <div class="oauth-buttons">
 <a class="oauth-button google-button" href="{{ route('google.redirect') }}">
-    <img src="https://cdn.simpleicons.org/google" alt="Google">
+    <img src="{{ asset('images/google.svg') }}" alt="" width="20" height="20">
     <span>Doorgaan met Google</span>
 </a>
 
 <a class="oauth-button github-button" href="{{ route('github.redirect') }}">
-    <img src="https://cdn.simpleicons.org/github/ffffff" alt="GitHub">
+    <img src="https://cdn.simpleicons.org/github/202124" alt="" width="20" height="20">
     <span>Doorgaan met GitHub</span>
 </a>
 </div>
