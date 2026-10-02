@@ -23,8 +23,8 @@
         <main class="auth-main">
             <div class="auth-card">
                 <p class="deltion-kicker">DELTION COLLEGE / STUDENTENPORTAAL</p>
-                <h1 class="auth-title">Welkom terug</h1>
-                <p class="auth-subtitle">Log in om verder te werken aan je portfolio.</p>
+                <h1 class="auth-title">{{ $title ?? 'Welkom terug' }}</h1>
+                <p class="auth-subtitle">{{ $subtitle ?? 'Log in om verder te werken aan je portfolio.' }}</p>
                 {{ $slot }}
             </div>
         </main>

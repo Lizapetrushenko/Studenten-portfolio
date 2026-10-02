@@ -1,6 +1,12 @@
 <?php
 
 return [
+    'unique' => ':attribute is al in gebruik.',
+    'custom' => [
+        'email' => [
+            'unique' => 'Dit e-mailadres is al geregistreerd. Log in of herstel je wachtwoord.',
+        ],
+    ],
     'required' => ':attribute is verplicht.',
     'email' => ':attribute moet een geldig e-mailadres zijn.',
     'url' => ':attribute moet een geldige URL zijn.',

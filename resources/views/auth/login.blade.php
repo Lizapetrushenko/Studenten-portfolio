@@ -7,7 +7,7 @@
 
         <!-- Email Address -->
         <div class="auth-field">
-            <x-input-label for="login" value="Gebruikersnaam of e-mailadres" />
+            <x-input-label for="login" value="E-mailadres" />
             <x-text-input id="login" class="auth-input" type="text" name="login" :value="old('login')" required autofocus autocomplete="username" />
             <x-input-error :messages="$errors->get('login')" class="auth-error" />
         </div>
@@ -39,6 +39,18 @@
         </div>
     </form>
     <div class="oauth-divider"><span>of</span></div>
-    <a class="google-button" href="{{ route('google.redirect') }}"><span>G</span> Doorgaan met Google</a>
-    <a class="token-link" href="{{ route('token.login') }}">Inloggen met token</a>
+    <div class="oauth-buttons">
+<a class="oauth-button google-button" href="{{ route('google.redirect') }}">
+    <img src="{{ asset('images/google.svg') }}" alt="" width="20" height="20">
+    <span>Doorgaan met Google</span>
+</a>
+
+<a class="oauth-button github-button" href="{{ route('github.redirect') }}">
+    <img src="https://cdn.simpleicons.org/github/202124" alt="" width="20" height="20">
+    <span>Doorgaan met GitHub</span>
+</a>
+</div>
+    <div class="register-container">
+        <a class="register-link" href="{{ route('register') }}">Nog geen account?</a>
+    </div>
 </x-guest-layout>
