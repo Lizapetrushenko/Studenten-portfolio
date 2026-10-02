@@ -1,6 +1,8 @@
 <x-guest-layout>
+    <x-slot:title>Wachtwoord vergeten?</x-slot:title>
+    <x-slot:subtitle>Vul het e-mailadres van je account in.</x-slot:subtitle>
     <div class="mb-4 text-sm text-gray-600">
-        Geen probleem. Vul je e-mailadres in. We sturen je een link waarmee je een nieuw wachtwoord kunt kiezen.
+        Als je e-mailadres bestaat, kun je op de volgende pagina een nieuw wachtwoord kiezen.
     </div>
 
     <!-- Session Status -->
@@ -18,7 +20,7 @@
 
         <div class="flex items-center justify-end mt-4">
             <x-primary-button>
-                Link voor nieuw wachtwoord sturen
+                Verder naar nieuw wachtwoord
             </x-primary-button>
         </div>
     </form>

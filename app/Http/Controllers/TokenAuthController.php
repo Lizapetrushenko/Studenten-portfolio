@@ -17,7 +17,7 @@ class TokenAuthController extends Controller
     {
         $data = $request->validate(['username' => ['required', 'string'], 'password' => ['required', 'string']]);
         $user = User::where('username', $data['username'])->orWhere('email', $data['username'])->first();
-        if (! $user || ! Hash::check($data['password'], $user->password)) return back()->withErrors(['issue' => 'Ongeldige gebruikersnaam of wachtwoord.']);
+        if (! $user || ! Hash::check($data['password'], $user->password)) return back()->withErrors(['issue' => 'Ongeldige e-mail of wachtwoord.']);
         $now = time();
         $token = JWT::encode(['iss' => config('app.url'), 'sub' => $user->id, 'iat' => $now, 'exp' => $now + 3600], config('app.key'), 'HS256');
         return view('auth.token-login', compact('token'))->with('status', 'Token aangemaakt.');
@@ -27,7 +27,7 @@ class TokenAuthController extends Controller
     {
         $data = $request->validate(['username' => ['required', 'string'], 'password' => ['required', 'string']]);
         $user = User::where('username', $data['username'])->orWhere('email', $data['username'])->first();
-        if (! $user || ! password_verify($data['password'], $user->password)) return response()->json(['message' => 'Ongeldige inloggegevens.'], 422);
+        if (! $user || ! Hash::check($data['password'], $user->password)) return response()->json(['message' => 'Ongeldige e-mail of wachtwoord.'], 422);
         $now = time();
         $token = JWT::encode(['iss' => config('app.url'), 'sub' => $user->id, 'iat' => $now, 'exp' => $now + 3600], config('app.key'), 'HS256');
         return response()->json(['token' => $token, 'verloopt_over' => '60 minuten']);

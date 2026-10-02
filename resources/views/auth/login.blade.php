@@ -7,7 +7,7 @@
 
         <!-- Email Address -->
         <div class="auth-field">
-            <x-input-label for="login" value="Gebruikersnaam of e-mailadres" />
+            <x-input-label for="login" value="E-mailadres" />
             <x-text-input id="login" class="auth-input" type="text" name="login" :value="old('login')" required autofocus autocomplete="username" />
             <x-input-error :messages="$errors->get('login')" class="auth-error" />
         </div>
