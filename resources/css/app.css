@@ -989,8 +989,9 @@ select:focus {
 
 .spin-chart-container-small {
     position: relative;
-    width: min(100%, 320px);
-    height: 320px;
+    width: min(100%, 210px);
+    height: 210px;
+    flex: 0 0 auto;
 }
 
 .spin-chart-container-small canvas {
@@ -1159,8 +1160,8 @@ select:focus {
     }
 
     .spin-chart-container-small {
-        width: min(100%, 280px);
-        height: 280px;
+        width: min(100%, 190px);
+        height: 190px;
     }
 
     .deltion-main {

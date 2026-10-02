@@ -3,7 +3,9 @@
         <div class="flex justify-between items-center">
             <!-- Logo Section -->
             <div class="shrink-0 flex items-center">
-                <img src="/images/deltionlogo.webp" alt="Deltion Logo" class="h-10 w-auto object-contain">
+                <a href="{{ route('dashboard') }}" aria-label="Naar mijn portfolio">
+                    <img src="/images/deltionlogo.webp" alt="Deltion Logo" class="h-10 w-auto object-contain">
+                </a>
             </div>
 
             <!-- Title Section -->
