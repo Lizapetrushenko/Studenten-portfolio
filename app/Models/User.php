@@ -8,16 +8,86 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    protected static function booted(): void
+    {
+        static::creating(function (User $user) {
+            $user->role ??= 'student';
+            if ($user->isStudent()) {
+                $parts = preg_split('/\s+/', trim((string) $user->name), 2);
+                $user->first_name ??= $parts[0] ?? null;
+                $user->last_name ??= $parts[1] ?? null;
+                $user->preferred_name ??= $user->first_name;
+            }
+        });
+        static::created(function (User $user) {
+            if ($user->isStudent()) {
+                $newGroup = Group::where('lifecycle_status', 'nieuw')->first();
+                if ($newGroup) $user->groups()->syncWithoutDetaching([$newGroup->id]);
+            }
+        });
+    }
+
     public function portfolios(): HasMany
     {
         return $this->hasMany(Portfolio::class);
     }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
+    }
+
+    public function groups(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Group::class)->withTimestamps();
+    }
+
+    public function reviewers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(self::class, 'student_reviewer', 'student_id', 'teacher_id')->withTimestamps();
+    }
+
+    public function reviewedStudents(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(self::class, 'student_reviewer', 'teacher_id', 'student_id')->withTimestamps();
+    }
+
+    public function hasLifecycleGroup(string $status): bool
+    {
+        return $this->groups()->where('lifecycle_status', $status)->exists();
+    }
+
+    public function portfolioIsLocked(): bool
+    {
+        return $this->hasLifecycleGroup('geslaagd') || $this->hasLifecycleGroup('weg');
+    }
+
+    public function canOnlySubmitEvidence(): bool
+    {
+        return $this->hasLifecycleGroup('herkansen');
+    }
+
+    public function displayName(): string
+    {
+        $first = $this->preferred_name ?: ($this->first_name ?: $this->name);
+        return trim($first.' '.($this->last_name ?? ''));
+    }
+
+    public function teachingGroups(): HasMany
+    {
+        return $this->hasMany(Group::class, 'teacher_id');
+    }
+
+    public function isAdmin(): bool { return $this->role === 'admin'; }
+    public function isTeacher(): bool { return $this->role === 'teacher'; }
+    public function isStudent(): bool { return $this->role === 'student'; }
 
     /**
      * The attributes that are mass assignable.
@@ -30,6 +100,14 @@ class User extends Authenticatable
         'leerweg',
         'email',
         'password',
+        'role',
+        'group_id',
+        'first_name',
+        'last_name',
+        'preferred_name',
+        'student_number',
+        'education',
+        'study_type',
     ];
 
     /**

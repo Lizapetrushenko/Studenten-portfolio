@@ -54,6 +54,16 @@ In order to ensure that the Laravel community is welcoming to all, please review
 
 If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
+## Rollen en accounts
+
+Voer eerst `php artisan migrate` uit. Nieuwe registraties krijgen automatisch de rol `student`. Maak daarna een bestaand account admin met:
+
+```bash
+php artisan app:make-admin admin@school.nl
+```
+
+De admin kan docentaccounts maken, groepen en docenten bekijken, studenten aan groepen koppelen en accounts verwijderen. Een docent kan eigen groepen maken, studenten zonder groep toevoegen, portfolio's van studenten in de eigen groepen bekijken en bewijsstukken beoordelen. Studenten beheren hun eigen portfolio en zien de status en feedback van hun docent.
+
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

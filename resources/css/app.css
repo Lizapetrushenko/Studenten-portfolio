@@ -497,6 +497,101 @@ select:focus {
     margin-top: 1.4rem;
 }
 
+.process-layout {
+    display: grid;
+    grid-template-columns: 3.5rem minmax(0, 1fr);
+    gap: .35rem;
+    align-items: start;
+}
+
+.kerntaak-tabs {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    padding-top: 2.95rem;
+}
+
+.kerntaak-tab {
+    min-height: 2.8rem;
+    border: 1px solid #c8cdd1;
+    border-radius: .75rem 0 0 .75rem;
+    color: var(--ink);
+    background: #fff;
+    font: 600 .78rem 'DM Sans', sans-serif;
+    cursor: pointer;
+}
+
+.kerntaak-tab:hover {
+    background: #f1f2f3;
+}
+
+.kerntaak-tab.is-active {
+    background: #d1d5d8;
+    border-color: #aeb5ba;
+}
+
+.kerntaak-tab:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.process-content {
+    min-width: 0;
+}
+
+.process-main {
+    min-width: 0;
+}
+
+.process-tabs {
+    display: flex;
+    gap: .35rem;
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 0 .15rem .2rem;
+    border-bottom: 1px solid var(--line);
+    scrollbar-width: thin;
+}
+
+.process-panel {
+    border: 1px solid var(--accent);
+}
+
+.process-panel > .section-title {
+    padding-bottom: .8rem;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 1.25rem;
+}
+
+.process-tab {
+    flex: 0 0 auto;
+    min-width: 3.25rem;
+    padding: .55rem .9rem;
+    border: 1px solid #c8cdd1;
+    border-bottom: 0;
+    border-radius: .85rem .85rem 0 0;
+    color: var(--ink);
+    background: #fff;
+    font: 600 .82rem 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: background-color .15s ease, border-color .15s ease;
+}
+
+.process-tab:hover {
+    background: #f1f2f3;
+}
+
+.process-tab.is-active {
+    background: #d1d5d8;
+    border-color: #aeb5ba;
+    color: #17211f;
+}
+
+.process-tab:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
 .process-group>h3 {
     font-size: 1rem;
     padding: .8rem 0;
@@ -588,6 +683,30 @@ select:focus {
 .file-edit {
     grid-column: 2 / 3;
     font-size: .7rem;
+}
+
+.file-edit strong {
+    display: block;
+    color: var(--muted);
+    font-size: .7rem;
+}
+
+.file-edit a {
+    display: inline-block;
+    margin-top: .35rem;
+    color: #245d88;
+    text-decoration: underline;
+}
+
+.file-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .8rem;
+    margin: -.35rem 0 .8rem 50px;
+}
+
+.file-actions .delete-idea-form {
+    margin: 0;
 }
 
 .plan-row {
@@ -984,6 +1103,11 @@ select:focus {
 .portfolio-panel,
 .spin-chart-panel {
     margin-bottom: 0;
+    border: 2px solid #f5b47b;
+}
+
+.portfolio-panel-empty {
+    grid-column: 1 / -1;
 }
 
 .portfolio-info {
@@ -1024,13 +1148,22 @@ select:focus {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: .8rem;
+    gap: .35rem;
+}
+
+.spin-chart-empty {
+    min-height: 190px;
+    display: grid;
+    place-items: center;
+    margin: 0;
+    color: var(--muted);
+    text-align: center;
 }
 
 .spin-chart-container-small {
     position: relative;
-    width: min(100%, 210px);
-    height: 210px;
+    width: min(100%, 310px);
+    height: 190px;
     flex: 0 0 auto;
 }
 
@@ -1038,6 +1171,25 @@ select:focus {
     display: block;
     width: 100% !important;
     height: 100% !important;
+}
+
+.spin-chart-panel .section-title {
+    margin-bottom: .35rem;
+}
+
+.spin-chart-panel .spin-legend-small {
+    justify-content: center;
+    gap: .15rem .45rem;
+}
+
+.spin-chart-panel .legend-item {
+    gap: .18rem;
+    font-size: .55rem;
+}
+
+.spin-chart-panel .legend-dot {
+    width: .32rem;
+    height: .32rem;
 }
 
 .spin-legend-small {
@@ -1088,7 +1240,7 @@ select:focus {
 
 .status-summary {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: .5rem;
     width: 100%;
     margin-top: .4rem;
@@ -1200,8 +1352,8 @@ select:focus {
     }
 
     .spin-chart-container-small {
-        width: min(100%, 190px);
-        height: 190px;
+        width: min(100%, 280px);
+        height: 180px;
     }
 
     .deltion-main {
@@ -1251,6 +1403,21 @@ select:focus {
 }
 
 @media (max-width: 720px) {
+    .process-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .kerntaak-tabs {
+        flex-direction: row;
+        padding-top: 0;
+    }
+
+    .kerntaak-tab {
+        min-width: 3.25rem;
+        min-height: 2.5rem;
+        border-radius: .75rem .75rem 0 0;
+    }
+
     .portfolio-sections {
         grid-template-columns: 1fr;
     }
