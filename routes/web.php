@@ -36,6 +36,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/mfa/setup', [MfaController::class, 'setup'])->name('mfa.setup');
     Route::post('/mfa/setup', [MfaController::class, 'enable'])->name('mfa.enable');
+    Route::post('/mfa/disable', [MfaController::class, 'disable'])->name('mfa.disable');
     Route::post('/portfolio', [PortfolioController::class, 'store'])->name('portfolio.store');
     Route::delete('/portfolio/{portfolio}', [PortfolioController::class, 'destroy'])->name('portfolio.destroy');
     Route::post('/portfolio/work-processes', [PortfolioController::class, 'storeWorkProcess'])->name('work-process.store');

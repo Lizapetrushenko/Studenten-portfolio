@@ -38,7 +38,7 @@
                             <x-dropdown-link :href="route('profile.edit')">
                                 Profiel
                             </x-dropdown-link>
-                            <x-dropdown-link :href="route('mfa.setup')">MFA instellen</x-dropdown-link>
+                            <x-mfa-menu />
 
                             @if(Auth::user()->portfolios()->exists())
                                 <form method="POST" action="{{ route('portfolio.destroy', Auth::user()->portfolios()->first()) }}" id="deletePortfolioFormHeader">
