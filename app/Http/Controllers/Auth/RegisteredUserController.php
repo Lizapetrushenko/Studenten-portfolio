@@ -31,15 +31,23 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:120'],
+            'last_name' => ['required', 'string', 'max:120'],
+            'preferred_name' => ['nullable', 'string', 'max:120'],
+            'student_number' => ['nullable', 'string', 'max:40', 'unique:users,student_number'],
             'username' => ['nullable', 'alpha_dash', 'max:50', 'unique:'.User::class],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        $name = trim($request->first_name.' '.$request->last_name);
         $user = User::create([
-            'name' => $request->name,
-            'username' => $request->username ?: strtolower(str_replace(' ', '-', $request->name)) . '-' . substr(md5($request->email), 0, 6),
+            'name' => $name,
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'preferred_name' => $request->preferred_name ?: $request->first_name,
+            'student_number' => $request->student_number,
+            'username' => $request->username ?: strtolower(str_replace(' ', '-', $name)) . '-' . substr(md5($request->email), 0, 6),
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);

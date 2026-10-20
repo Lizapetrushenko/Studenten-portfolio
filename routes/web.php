@@ -6,6 +6,8 @@ use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\TokenAuthController;
 use App\Http\Controllers\MfaController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\TeacherController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -15,8 +17,13 @@ Route::get('/screens', function () {
     return view('screens.index');
 })->name('screens.index');
 
-Route::get('/dashboard', [PortfolioController::class, 'index'])
-    ->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', function () {
+    return match (auth()->user()->role) {
+        'admin' => redirect()->route('admin.dashboard'),
+        'teacher' => redirect()->route('teacher.dashboard'),
+        default => app(PortfolioController::class)->index(request()),
+    };
+})->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::get('/auth/google/redirect', [SocialAuthController::class, 'redirect'])->name('google.redirect');
 Route::get('/auth/google/callback', [SocialAuthController::class, 'callback'])->name('google.callback');
@@ -36,13 +43,44 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/mfa/setup', [MfaController::class, 'setup'])->name('mfa.setup');
     Route::post('/mfa/setup', [MfaController::class, 'enable'])->name('mfa.enable');
+    Route::get('/bewijs/{evidence}/download', [PortfolioController::class, 'downloadEvidence'])->name('evidence.download');
+    Route::get('/bewijs/{evidence}/open', [PortfolioController::class, 'openEvidence'])->name('evidence.open');
+});
+
+Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [AdminController::class, 'index'])->name('dashboard');
+    Route::post('/docenten', [AdminController::class, 'createTeacher'])->name('teachers.store');
+    Route::post('/groepen', [AdminController::class, 'createGroup'])->name('groups.store');
+    Route::patch('/studenten/{student}/groep', [AdminController::class, 'assignStudent'])->name('students.group');
+    Route::delete('/gebruikers/{user}', [AdminController::class, 'removeUser'])->name('users.destroy');
+});
+
+Route::middleware(['auth', 'verified', 'role:teacher'])->prefix('docent')->name('teacher.')->group(function () {
+    Route::get('/', [TeacherController::class, 'index'])->name('dashboard');
+    Route::post('/groepen', [TeacherController::class, 'createGroup'])->name('groups.store');
+    Route::get('/groepen', [TeacherController::class, 'groups'])->name('groups.index');
+    Route::get('/werkprocessen', [TeacherController::class, 'workProcesses'])->name('work-processes.index');
+    Route::get('/groepen/{group}', [TeacherController::class, 'showGroup'])->name('groups.show');
+    Route::get('/studenten', [TeacherController::class, 'students'])->name('students.index');
+    Route::get('/studenten/{student}', [TeacherController::class, 'showStudent'])->name('students.show');
+    Route::get('/groepen/{group}/instellingen', [TeacherController::class, 'showGroupSettings'])->name('groups.settings');
+    Route::post('/groepen/{group}/werkprocessen', [TeacherController::class, 'storeGroupWorkProcess'])->name('groups.work-processes.store');
+    Route::patch('/groepen/{group}/werkprocessen/{workProcess}', [TeacherController::class, 'updateGroupWorkProcess'])->name('groups.work-processes.update');
+    Route::delete('/groepen/{group}/werkprocessen/{workProcess}', [TeacherController::class, 'destroyGroupWorkProcess'])->name('groups.work-processes.destroy');
+    Route::post('/groepen/{group}/studenten', [TeacherController::class, 'addStudent'])->name('groups.students.store');
+    Route::get('/studenten/{student}/portfolio', [TeacherController::class, 'showPortfolio'])->name('students.portfolio');
+    Route::patch('/studenten/{student}/gegevens', [TeacherController::class, 'updateStudent'])->name('students.update');
+    Route::delete('/studenten/{student}', [TeacherController::class, 'removeStudent'])->name('students.destroy');
+    Route::patch('/bewijs/{evidence}/beoordeling', [TeacherController::class, 'reviewEvidence'])->name('evidence.review');
+});
+
+Route::middleware(['auth', 'verified', 'role:student'])->group(function () {
     Route::post('/portfolio', [PortfolioController::class, 'store'])->name('portfolio.store');
     Route::delete('/portfolio/{portfolio}', [PortfolioController::class, 'destroy'])->name('portfolio.destroy');
-    Route::post('/portfolio/work-processes', [PortfolioController::class, 'storeWorkProcess'])->name('work-process.store');
-    Route::patch('/portfolio/work-processes/{workProcess}', [PortfolioController::class, 'updateWorkProcess'])->name('work-process.update');
     Route::post('/portfolio/evidence', [PortfolioController::class, 'storeEvidence'])->name('evidence.store');
     Route::patch('/portfolio/evidence/{evidence}', [PortfolioController::class, 'updateEvidence'])->name('evidence.update');
     Route::delete('/portfolio/evidence/{evidence}/idea', [PortfolioController::class, 'destroyIdea'])->name('evidence.idea.destroy');
+    Route::delete('/portfolio/evidence/{evidence}/bestand', [PortfolioController::class, 'removeEvidenceFile'])->name('evidence.file.destroy');
     Route::delete('/portfolio/evidence/{evidence}', [PortfolioController::class, 'destroyEvidence'])->name('evidence.destroy');
 });
 
