@@ -132,6 +132,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'mfa_enabled' => 'boolean',
+            'is_admin' => 'boolean',
         ];
     }
 }
