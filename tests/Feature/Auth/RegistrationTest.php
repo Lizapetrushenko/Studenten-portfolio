@@ -11,21 +11,42 @@ class RegistrationTest extends TestCase
 
     public function test_registration_screen_can_be_rendered(): void
     {
-        $response = $this->get('/register');
-
-        $response->assertStatus(200);
+        $this->get('/register')->assertStatus(200);
     }
 
-    public function test_new_users_can_register(): void
+    public function test_new_users_can_register_with_each_leerweg(): void
     {
-        $response = $this->post('/register', [
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-        ]);
+        foreach (['BOL', 'BBL', 'FLEX'] as $leerweg) {
+            $email = strtolower($leerweg).'@example.com';
+            $response = $this->post('/register', [
+                'name' => 'Test User',
+                'email' => $email,
+                'password' => 'password',
+                'password_confirmation' => 'password',
+                'leerweg' => $leerweg,
+            ]);
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+            $this->assertAuthenticated();
+            $response->assertRedirect(route('dashboard', absolute: false));
+            $this->assertDatabaseHas('users', ['email' => $email, 'leerweg' => $leerweg]);
+            $this->post('/logout');
+        }
+    }
+
+    public function test_registration_requires_a_valid_leerweg(): void
+    {
+        foreach ([null, 'INVALID'] as $leerweg) {
+            $response = $this->post('/register', [
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+                'password' => 'password',
+                'password_confirmation' => 'password',
+                'leerweg' => $leerweg,
+            ]);
+
+            $response->assertSessionHasErrors('leerweg');
+            $this->assertGuest();
+            $this->assertDatabaseMissing('users', ['email' => 'test@example.com']);
+        }
     }
 }

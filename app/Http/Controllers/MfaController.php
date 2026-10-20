@@ -13,6 +13,9 @@ class MfaController extends Controller
 {
     public function setup(Request $request): View
     {
+        if ($request->user()->mfa_enabled) {
+            return view('auth.mfa-setup');
+        }
         $secret = $request->user()->mfa_secret
             ? Crypt::decrypt($request->user()->mfa_secret)
             : ($request->session()->get('mfa_setup_secret') ?: app(Google2FA::class)->generateSecretKey());
@@ -28,9 +31,20 @@ class MfaController extends Controller
         if (! $secret || ! app(Google2FA::class)->verifyKey($secret, $request->string('code')->toString(), 1)) {
             return back()->withErrors(['code' => 'De MFA-code is onjuist.'])->withInput();
         }
-        $request->user()->update(['mfa_secret' => Crypt::encrypt($secret), 'mfa_enabled' => true]);
+        $request->user()->forceFill(['mfa_secret' => Crypt::encrypt($secret), 'mfa_enabled' => true])->save();
         $request->session()->forget('mfa_setup_secret');
-        return back()->with('status', 'MFA is ingeschakeld.');
+        return redirect()->route('mfa.setup')->with('status', 'MFA is ingeschakeld.');
+    }
+
+    public function disable(Request $request): RedirectResponse
+    {
+        $request->user()->forceFill([
+            'mfa_enabled' => false,
+            'mfa_secret' => null,
+        ])->save();
+        $request->session()->forget('mfa_setup_secret');
+
+        return redirect()->route('mfa.setup')->with('status', 'MFA is uitgeschakeld.');
     }
 
     public function challenge(Request $request): View|RedirectResponse

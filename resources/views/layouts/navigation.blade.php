@@ -35,7 +35,7 @@
                         <x-dropdown-link :href="route('profile.edit')">
                             Profiel
                         </x-dropdown-link>
-                        <x-dropdown-link :href="route('mfa.setup')">MFA instellen</x-dropdown-link>
+                        <x-mfa-menu />
 
                         <!-- Authentication -->
                         <form method="POST" action="{{ route('logout') }}">
@@ -79,6 +79,7 @@
             </div>
 
             <div class="mt-3 space-y-1">
+                <x-mfa-menu />
                 <x-responsive-nav-link :href="route('profile.edit')">
                         Profiel
                 </x-responsive-nav-link>

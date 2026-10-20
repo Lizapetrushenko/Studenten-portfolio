@@ -38,6 +38,7 @@ class RegisteredUserController extends Controller
             'username' => ['nullable', 'alpha_dash', 'max:50', 'unique:'.User::class],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'leerweg' => ['required', 'in:BOL,BBL,FLEX'],
         ]);
 
         $name = trim($request->first_name.' '.$request->last_name);
@@ -50,6 +51,7 @@ class RegisteredUserController extends Controller
             'username' => $request->username ?: strtolower(str_replace(' ', '-', $name)) . '-' . substr(md5($request->email), 0, 6),
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'leerweg' => $request->leerweg,
         ]);
 
         event(new Registered($user));
