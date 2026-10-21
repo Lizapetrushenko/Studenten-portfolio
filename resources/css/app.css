@@ -1436,3 +1436,15 @@ select:focus {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* Consistent corners for interface controls and surfaces. */
+:is(.panel, .auth-card, .screen-card, .process-add-form, .process-panel,
+    .evidence-item, .notice, .flash-message, .empty-state, .mfa-secret,
+    .tag, .count, .button, .deltion-button, .auth-submit, .oauth-button,
+    .process-tab, .kerntaak-tab, .tiny-button, .small-button,
+    button:not(.rounded-full), input:not([type="radio"]), select, textarea,
+    [class~="rounded"], [class~="rounded-md"], [class~="rounded-lg"],
+    [class~="rounded-xl"], [class~="rounded-2xl"], [class~="rounded-3xl"],
+    details > summary, details > div) {
+    border-radius: 5px !important;
+}
