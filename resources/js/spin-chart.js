@@ -37,12 +37,13 @@ document.addEventListener('DOMContentLoaded', function () {
         data: { labels: processLabels.length ? processLabels : processCodes, datasets },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             scales: {
                 r: {
                     beginAtZero: true,
                     max: 5,
-                    ticks: { stepSize: 1, font: { size: 9 } },
+                    ticks: { stepSize: 1, font: { size: 8 } },
+                    pointLabels: { font: { size: 8 } },
                     grid: { color: '#e5e7eb' }
                 }
             },
