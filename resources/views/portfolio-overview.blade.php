@@ -38,8 +38,8 @@
                                 <p class="info-value">{{ $portfolio->title }}</p>
                             </div>
                             <div class="info-item">
-                                <label class="info-label">Opleiding:</label>
-                                <p class="info-value">{{ $portfolio->study }}</p>
+                                <label class="info-label">Leerweg:</label>
+                                <p class="info-value">{{ auth()->user()->leerweg ?: 'Nog niet ingesteld' }}</p>
                             </div>
                             <div class="info-item">
                                 <label class="info-label">Korte introductie:</label>
@@ -60,7 +60,7 @@
                         @if(!$portfolioLocked)
                         <form method="POST" action="{{ route('portfolio.store') }}" class="form-grid portfolio-form">@csrf
                             <label>Projectnaam<input name="title" value="{{ old('title') }}" placeholder="Schrijf zelf je projectnaam" required></label>
-                            <label>Opleidingstype<input value="{{ auth()->user()->study_type ?: 'Wordt door je docent ingesteld' }}" disabled></label>
+                            <label>Leerweg<input value="{{ auth()->user()->leerweg ?: 'Nog niet ingesteld' }}" readonly></label>
                             <label class="full">Korte introductie<textarea name="bio" rows="3" placeholder="Waar ben je trots op?">{{ old('bio') }}</textarea></label>
                             <div class="full"><button class="button" type="submit">Portfolio opslaan</button></div>
                         </form>
