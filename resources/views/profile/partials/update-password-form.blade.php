@@ -33,16 +33,6 @@
 
         <div class="flex items-center gap-4">
             <x-primary-button>Opslaan</x-primary-button>
-
-            @if (session('status') === 'password-updated')
-                <p
-                    x-data="{ show: true }"
-                    x-if="show"
-                    x-transition
-                    x-init="setTimeout(() => show = false, 2000)"
-                    class="text-sm text-gray-600"
-                >Opgeslagen.</p>
-            @endif
         </div>
     </form>
 </section>

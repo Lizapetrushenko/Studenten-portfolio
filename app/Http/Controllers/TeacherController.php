@@ -71,6 +71,28 @@ class TeacherController extends Controller
         return view('teacher.group', compact('group', 'availableStudents'));
     }
 
+    public function updateGroup(Request $request, Group $group): RedirectResponse
+    {
+        $this->authorizeGroup($request, $group);
+        abort_if($group->lifecycle_status !== null, 403, 'Statusgroepen kunnen niet worden aangepast.');
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'photo' => ['nullable', 'image', 'max:5120'],
+            'remove_photo' => ['nullable', 'boolean'],
+        ]);
+        if ($request->boolean('remove_photo') && $group->photo_path) {
+            Storage::disk('public')->delete($group->photo_path);
+            $group->photo_path = null;
+        }
+        if ($request->hasFile('photo')) {
+            if ($group->photo_path) Storage::disk('public')->delete($group->photo_path);
+            $group->photo_path = $request->file('photo')->store('groups', 'public');
+        }
+        $group->name = $data['name'];
+        $group->save();
+        return back()->with('status', 'Groepsgegevens opgeslagen.');
+    }
+
     public function showGroupSettings(Request $request, Group $group): View
     {
         $this->authorizeGroup($request, $group);
@@ -178,7 +200,7 @@ class TeacherController extends Controller
         $protectedGroupIds = $student->groups()->whereNull('lifecycle_status')->where(fn ($query) => $query->whereNull('teacher_id')->orWhere('teacher_id', '!=', $request->user()->id))->pluck('groups.id')->all();
         $student->groups()->sync(array_unique([...$protectedGroupIds, ...$selectedGroups, $statusGroup->id]));
         $student->reviewers()->sync($reviewerIds);
-        $student->update(['group_id' => $selectedGroups[0] ?? ($protectedGroupIds[0] ?? null), 'study_type' => $data['study_type']]);
+        $student->update(['group_id' => $selectedGroups[0] ?? ($protectedGroupIds[0] ?? $statusGroup->id), 'study_type' => $data['study_type']]);
         $student->portfolios()->update(['study' => $data['study_type']]);
         return redirect()->route('teacher.students.show', $student)->with('status', 'Studentgegevens opgeslagen.');
     }
@@ -195,7 +217,7 @@ class TeacherController extends Controller
             }
         }
         $student->delete();
-        return back()->with('status', 'Student uit het systeem verwijderd.');
+        return redirect()->route('teacher.students.index')->with('status', 'Student uit het systeem verwijderd.');
     }
 
     private function authorizeGroup(Request $request, Group $group): void

@@ -1,31 +1,5 @@
 <x-app-layout headerTitle="Mijn portfolio">
     <div class="portal-shell">
-            @if (session('status'))
-                <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 10000)" x-show="show" role="status" aria-live="polite" x-transition:enter="transition ease-out duration-500" x-transition:enter-start="translate-x-full opacity-0" x-transition:enter-end="translate-x-0 opacity-100" x-transition:leave="transition ease-in duration-300" x-transition:leave-start="translate-x-0 opacity-100" x-transition:leave-end="translate-x-full opacity-0" class="fixed bottom-6 right-6 z-50 w-[calc(100%-3rem)] max-w-sm pointer-events-auto">
-                    <div class="bg-white rounded-xl shadow-2xl border border-green-100 border-l-4 border-l-green-500 overflow-hidden">
-                        <div class="p-4 flex items-start gap-3">
-                            <div class="flex-shrink-0">
-                                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
-                                    <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="flex-1">
-                                <h3 class="text-sm font-semibold text-gray-900">Gelukt</h3>
-                                <p class="mt-1 text-sm text-gray-600">{{ session('status') }}</p>
-                            </div>
-                            <button @click="show = false" aria-label="Melding sluiten" class="text-gray-400 hover:text-gray-600 transition">
-                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="h-1 bg-gradient-to-r from-green-500 to-emerald-500 animate-pulse"></div>
-                    </div>
-                </div>
-            @endif
-            
             <div class="portfolio-sections">
                 <section class="panel portfolio-panel {{ !$portfolio ? 'portfolio-panel-empty' : '' }}" x-data="{ editing: false }">
                     <div class="section-title"><div><p class="eyebrow">01 / PROFIEL</p><h2>Portfolio-informatie</h2></div><div class="flex items-center gap-3"><span class="tag">{{ $portfolio ? 'Actief' : 'Start hier' }}</span>@if($portfolio && !$portfolioLocked && !$submitOnly)<button type="button" class="button tiny-button" @click.prevent="editing = !editing" x-text="editing ? 'Annuleren' : 'Aanpassen'"></button>@endif</div></div>
@@ -53,7 +27,7 @@
                             <div class="full"><button class="button" type="submit">Wijzigingen opslaan</button></div>
                         </form>
                         @if(!$portfolioLocked && !$submitOnly && !$portfolio->evidence->contains('status', 'akkoord'))
-                            <form method="POST" action="{{ route('portfolio.destroy', $portfolio) }}" class="mt-4" onsubmit="return confirm('Weet je zeker dat je je portfolio en alle bewijsstukken wilt verwijderen?')">@csrf @method('DELETE')<button class="delete-idea" type="submit">Portfolio verwijderen</button></form>
+                            <form method="POST" action="{{ route('portfolio.destroy', $portfolio) }}" class="mt-4" data-confirm="Weet u zeker dat u uw portfolio en alle bewijsstukken wilt verwijderen?">@csrf @method('DELETE')<button class="delete-idea" type="submit">Portfolio verwijderen</button></form>
                         @endif
                     @else
                         <!-- Portfolio Invulformulier -->
@@ -167,8 +141,8 @@
                                 @if($item->feedback)<p class="plan-note"><strong>Notitie docent:</strong> {{ $item->feedback }}</p>@endif
                                 @if($item->status !== 'akkoord' && !$portfolioLocked && !$submitOnly)
                                     <div class="file-actions">
-                                        @if($item->file_path)<form method="POST" action="{{ route('evidence.file.destroy', $item) }}" class="delete-idea-form" onsubmit="return confirm('Dit bestand verwijderen?')">@csrf @method('DELETE')<button class="delete-idea" type="submit">Bestand verwijderen</button></form>@endif
-                                        <form method="POST" action="{{ route('evidence.destroy', $item) }}" class="delete-idea-form" onsubmit="return confirm('Dit bewijsstuk en het bijbehorende bestand verwijderen?')">@csrf @method('DELETE')<button class="delete-idea" type="submit">Bewijsstuk verwijderen</button></form>
+                                        @if($item->file_path)<form method="POST" action="{{ route('evidence.file.destroy', $item) }}" class="delete-idea-form" data-confirm="Weet u zeker dat u dit bestand wilt verwijderen?">@csrf @method('DELETE')<button class="delete-idea" type="submit">Bestand verwijderen</button></form>@endif
+                                        <form method="POST" action="{{ route('evidence.destroy', $item) }}" class="delete-idea-form" data-confirm="Weet u zeker dat u dit bewijsstuk en het bijbehorende bestand wilt verwijderen?">@csrf @method('DELETE')<button class="delete-idea" type="submit">Bewijsstuk verwijderen</button></form>
                                     </div>
                                 @endif
                                 @if($item->idea && !$portfolioLocked && !$submitOnly && $item->status !== 'akkoord')<form method="POST" action="{{ route('evidence.idea.destroy', $item) }}" class="delete-idea-form">@csrf @method('DELETE')<button class="delete-idea" type="submit">Idee verwijderen</button></form>@endif

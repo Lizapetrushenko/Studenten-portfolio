@@ -1,7 +1,6 @@
 <x-app-layout headerTitle="Portfolio van {{ $student->name }}">
     <div class="portal-shell space-y-6">
         <a href="{{ route('teacher.students.show', $student) }}" class="underline">← Terug naar studentgegevens</a>
-        @if (session('status'))<div class="panel" role="status">{{ session('status') }}</div>@endif
         @if ($errors->any())<div class="panel text-red-700">{{ $errors->first() }}</div>@endif
         <section class="panel">
             <p class="eyebrow">STUDENTPORTFOLIO</p><h2>{{ $portfolio->title }}</h2><p>{{ $student->displayName() }} · {{ $student->email }} · {{ $student->student_number }} · {{ $student->study_type ?: $portfolio->study }}</p>

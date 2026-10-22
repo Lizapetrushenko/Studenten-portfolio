@@ -1,7 +1,6 @@
 <x-app-layout headerTitle="Werkprocessen · {{ $group->name }}">
     <div class="portal-shell space-y-6">
         <a href="{{ route('teacher.groups.show', $group) }}" class="underline">← Terug naar groep {{ $group->name }}</a>
-        @if (session('status'))<div class="panel" role="status">{{ session('status') }}</div>@endif
         @if ($errors->any())<div class="panel text-red-700">{{ $errors->first() }}</div>@endif
 
         <section class="panel">

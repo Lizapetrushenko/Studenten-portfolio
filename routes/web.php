@@ -50,8 +50,12 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('dashboard');
     Route::post('/docenten', [AdminController::class, 'createTeacher'])->name('teachers.store');
+    Route::get('/docenten/{teacher}', [AdminController::class, 'showTeacher'])->name('teachers.show');
     Route::post('/groepen', [AdminController::class, 'createGroup'])->name('groups.store');
+    Route::get('/groepen/{group}', [AdminController::class, 'showGroup'])->name('groups.show');
+    Route::patch('/groepen/{group}', [AdminController::class, 'updateGroup'])->name('groups.update');
     Route::patch('/studenten/{student}/groep', [AdminController::class, 'assignStudent'])->name('students.group');
+    Route::get('/studenten/{student}', [AdminController::class, 'showStudent'])->name('students.show');
     Route::delete('/gebruikers/{user}', [AdminController::class, 'removeUser'])->name('users.destroy');
 });
 
@@ -61,6 +65,7 @@ Route::middleware(['auth', 'verified', 'role:teacher'])->prefix('docent')->name(
     Route::get('/groepen', [TeacherController::class, 'groups'])->name('groups.index');
     Route::get('/werkprocessen', [TeacherController::class, 'workProcesses'])->name('work-processes.index');
     Route::get('/groepen/{group}', [TeacherController::class, 'showGroup'])->name('groups.show');
+    Route::patch('/groepen/{group}', [TeacherController::class, 'updateGroup'])->name('groups.update');
     Route::get('/studenten', [TeacherController::class, 'students'])->name('students.index');
     Route::get('/studenten/{student}', [TeacherController::class, 'showStudent'])->name('students.show');
     Route::get('/groepen/{group}/instellingen', [TeacherController::class, 'showGroupSettings'])->name('groups.settings');

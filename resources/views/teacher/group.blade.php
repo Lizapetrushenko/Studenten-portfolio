@@ -2,10 +2,18 @@
     <div class="portal-shell space-y-6">
         <a href="{{ route('teacher.dashboard') }}" class="underline">← Terug naar mijn groepen</a>
         @if(!$group->lifecycle_status)<a href="{{ route('teacher.groups.settings', $group) }}" class="button inline-flex">Instellingen werkprocessen</a>@endif
-        @if (session('status'))<div class="panel" role="status">{{ session('status') }}</div>@endif
         @if ($errors->any())<div class="panel text-red-700">{{ $errors->first() }}</div>@endif
         <section class="panel">
+            @if($group->lifecycle_status)<x-group-status-photo :status="$group->lifecycle_status" size="h-40 w-40 mb-5" />@endif
             <div class="section-title"><div><p class="eyebrow">GROEP</p><h2>{{ $group->name }}</h2></div><span class="count">{{ $group->students->count() }} studenten</span></div>
+            @if(!$group->lifecycle_status)
+                <form method="POST" action="{{ route('teacher.groups.update', $group) }}" enctype="multipart/form-data" class="form-grid mb-6 border-b pb-5">@csrf @method('PATCH')
+                    <label>Naam van de groep<input name="name" value="{{ $group->name }}" maxlength="120" required></label>
+                    <label>Groepsfoto<input type="file" name="photo" accept="image/*"><span class="mt-1 block text-sm text-gray-600">Afbeelding, maximaal 5 MB.</span></label>
+                    @if($group->photo_path)<div class="flex items-center gap-4"><img src="{{ asset('storage/'.$group->photo_path) }}" alt="Foto van {{ $group->name }}" class="h-20 w-20 rounded-full object-cover"><label class="flex-row items-center"><input type="checkbox" name="remove_photo" value="1"> Foto verwijderen</label></div>@endif
+                    <div class="full"><button class="button">Groepsgegevens opslaan</button></div>
+                </form>
+            @endif
             @if(!$group->lifecycle_status)<form method="POST" action="{{ route('teacher.groups.students.store', $group) }}" class="form-grid">@csrf
                 <label>Student aan deze groep toevoegen<select name="student_id" required><option value="">Kies een student</option>@foreach($availableStudents as $student)<option value="{{ $student->id }}">{{ $student->displayName() }} — {{ $student->email }}</option>@endforeach</select></label>
                 <div class="full"><button class="button" @disabled($availableStudents->isEmpty())>Toevoegen aan groep</button></div>

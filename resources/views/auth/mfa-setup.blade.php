@@ -3,11 +3,6 @@
         <section class="panel auth-card">
             <p class="deltion-kicker">EXTRA BEVEILIGING</p>
             <h1 class="auth-title">MFA instellen</h1>
-            @if (session('status') && ! auth()->user()->mfa_enabled)
-                <div role="status" style="margin: 1rem 0; padding: 1rem; border: 1px solid #15803d; border-radius: .5rem; background: #f0fdf4; color: #166534;">
-                    {{ session('status') }}
-                </div>
-            @endif
             @if (auth()->user()->mfa_enabled)
                 <div role="status" aria-live="polite" style="margin: 1.25rem 0; padding: 1rem; border: 1px solid #15803d; border-radius: .5rem; background: #f0fdf4; color: #166534;">
                     <strong>MFA is ingeschakeld.</strong>
