@@ -24,12 +24,29 @@ class GroupProgressTest extends TestCase
         }
         $url = route('teacher.groups.progress', $group);
         $this->actingAs($teacher)->get($url)->assertOk()->assertSee('K1W1')->assertSee('Plan document')->assertSee('Akkoord document')->assertDontSee('Prive idee')->assertDontSee('Concept document');
-        $this->get($url.'?status=Akkoord')->assertOk()->assertSee('Akkoord document')->assertDontSee('Plan document');
+        $this->get($url.'?status=akkoord')->assertOk()->assertSee('Akkoord document')->assertDontSee('Plan document');
         $this->get($url.'?zoek=onbekend')->assertOk()->assertSee('Geen studenten gevonden met deze filters.')->assertDontSee('Plan document');
-        $this->get($url.'?zoek=anna&status=Ingeleverd')->assertOk()->assertSee('Plan document')->assertDontSee('Akkoord document');
+        $this->get($url.'?zoek=anna&status=ingeleverd')->assertOk()->assertSee('Plan document')->assertDontSee('Akkoord document');
         $this->get($url.'?status=Idee')->assertSessionHasErrors('status');
     }
 
+    public function test_created_evidence_is_grey_and_turns_orange_after_student_submits(): void
+    {
+        $teacher = User::factory()->create(['role' => 'teacher']);
+        $group = $teacher->teachingGroups()->create(['name' => 'SD2B']);
+        $group->workProcesses()->create(['number' => 1, 'name' => 'Plannen']);
+        $student = User::factory()->create(['role' => 'student']);
+        $student->groups()->sync([$group->id]);
+        $portfolio = $student->portfolios()->create(['title' => 'Portfolio', 'study' => 'BBL']);
+        $item = $portfolio->evidence()->create(['title' => 'Mijn bewijsstuk', 'status' => 'idee', 'work_process' => '1', 'category' => 'Project', 'item_number' => 1]);
+        $url = route('teacher.groups.progress', $group);
+        $this->actingAs($teacher)->get($url)->assertOk()->assertSee('class="progress-evidence progress-niet-ingeleverd"', false)->assertDontSee('Mijn bewijsstuk');
+        $this->actingAs($student)->patch(route('evidence.update', $item), ['status' => 'bezig'])->assertRedirect()->assertSessionHasNoErrors();
+        $this->actingAs($teacher)->get($url)->assertOk()->assertSee('class="progress-evidence progress-niet-ingeleverd"', false)->assertDontSee('Mijn bewijsstuk');
+        $this->actingAs($student)->patch(route('evidence.update', $item), ['status' => 'ingeleverd'])->assertRedirect()->assertSessionHasNoErrors();
+        $this->actingAs($teacher)->get($url)->assertOk()->assertSee('class="progress-evidence progress-ingeleverd"', false)->assertSee('Mijn bewijsstuk')->assertDontSee('class="progress-evidence progress-niet-ingeleverd"', false);
+        $this->get($url.'?status=niet%20ingeleverd')->assertOk()->assertSee('Geen studenten gevonden met deze filters.');
+    }
     public function test_only_linked_teachers_can_mark_submitted_evidence_for_review(): void
     {
         $teacher = User::factory()->create(['role' => 'teacher']);
@@ -45,6 +62,13 @@ class GroupProgressTest extends TestCase
         $this->actingAs($teacher)->patch($url, ['status' => 'nakijken'])->assertRedirect();
         $this->assertSame('nakijken', $item->fresh()->status);
         $this->assertSame('Bestaande feedback', $item->fresh()->feedback);
+        $this->assertNull($item->fresh()->feedback_author_name);
+        $this->patch($url, ['status' => 'nakijken', 'feedback' => 'Mijn nieuwe feedback'])->assertRedirect();
+        $this->assertSame($teacher->displayName(), $item->fresh()->feedback_author_name);
+        $this->get(route('teacher.students.portfolio', $student))->assertOk()->assertSee('Notitie van '.$teacher->displayName());
+        $this->actingAs($student)->get('/dashboard')->assertOk()->assertSee('Notitie van '.$teacher->displayName());
+        $this->actingAs($teacher)->patch($url, ['status' => 'nakijken'])->assertRedirect();
+        $this->assertSame($teacher->displayName(), $item->fresh()->feedback_author_name);
         $this->get(route('teacher.groups.progress', $group).'?status=nakijken')->assertOk()->assertSee('Beoordelen');
         $this->patch($url, ['status' => 'akkoord'])->assertRedirect();
         $this->patch($url, ['status' => 'nakijken'])->assertStatus(422);

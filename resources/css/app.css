@@ -1711,8 +1711,8 @@ select:focus {
 .progress-table tbody th { background: var(--card); }
 .progress-table abbr { text-decoration: none; cursor: help; }
 .progress-table small { display: block; margin-top: .35rem; color: var(--muted); font-weight: 400; }
-.progress-items { display: flex; flex-wrap: wrap; justify-content: center; gap: .35rem; }
-.progress-evidence { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; min-height: 28px; padding: .2rem .4rem; border: 1px solid; border-radius: 5px; font-weight: 600; text-decoration: none; }
+.progress-items { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: center; gap: .35rem; }
+.progress-evidence { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; min-width: 30px; min-height: 30px; flex: 0 0 auto; box-sizing: border-box; padding: 0; border: 1px solid; border-radius: 5px; font-weight: 600; text-decoration: none; }
 .progress-evidence:hover { outline: 1px solid currentColor; }
 .progress-evidence:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 .progress-ingeleverd { background: #fff0df; color: #9a4300; border-color: #e8b67e; }
@@ -1770,4 +1770,79 @@ select:focus {
 .evidence-delete-button:focus-visible {
     outline: 2px solid #a32b28;
     outline-offset: 3px;
+}
+.progress-niet-ingeleverd { background: #dfe3e6; color: #52616b; border-color: #a9b2b9; }
+
+.teacher-portfolio-page .review-evidence-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+}
+
+.review-evidence-heading h3 { margin: 0; }
+.review-status-label {
+    display: inline-flex;
+    align-items: center;
+    align-self: center;
+    flex: 0 0 auto;
+    padding: .25rem .6rem;
+    border: 1px solid;
+    border-radius: 5px;
+    font-size: .75rem;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.evidence-review-form {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) minmax(0, 2fr) auto;
+    align-items: end;
+    gap: 1rem;
+}
+
+.evidence-review-form label { min-width: 0; }
+.evidence-review-form select, .evidence-review-form textarea {
+    min-height: 46px;
+    height: 46px;
+    font-size: .85rem;
+}
+.evidence-review-form textarea { resize: vertical; }
+.evidence-review-form .review-save-button {
+    width: auto;
+    min-height: 46px;
+    padding: .65rem .85rem;
+    font-size: .8rem;
+    white-space: nowrap;
+    justify-self: start;
+}
+.teacher-portfolio-page article { scroll-margin-top: 1.5rem; }
+@media (max-width: 900px) {
+    .evidence-review-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .evidence-review-form .review-save-button { grid-column: 1 / -1; }
+}
+@media (max-width: 540px) {
+    .evidence-review-form { grid-template-columns: minmax(0, 1fr); }
+}
+/* Feedback and delete actions have their own space below each evidence form. */
+.teacher-feedback {
+    margin: 0 0 1rem 51px;
+    padding: 1rem 1.15rem;
+    min-height: 110px;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 5px;
+    background: #fff;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+}
+.teacher-feedback h4 { margin: 0 0 .6rem; font-size: .9rem; font-weight: 600; }
+.teacher-feedback p { margin: 0; font-size: 1rem; line-height: 1.65; white-space: pre-wrap; }
+.process-group > .file-actions { margin: .75rem 0 1.25rem 51px; align-items: center; }
+.process-group > .delete-idea-form { margin: .75rem 0 1.25rem 51px; }
+.evidence-review-form textarea { min-height: 120px; height: 120px; }
+@media (max-width: 720px) {
+    .teacher-feedback { margin-left: 46px; }
+    .process-group > .file-actions, .process-group > .delete-idea-form { margin-left: 46px; }
 }

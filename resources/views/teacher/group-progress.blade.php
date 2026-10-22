@@ -33,15 +33,20 @@
                                 @foreach($processes as $process)
                                     <td><div class="progress-items">
                                         @forelse($row['evidence']->get((string) $process->number, collect()) as $item)
-                                            @php($itemStatus = $item->status ?: 'niet bekeken')
+                                            @php($normalizedStatus = mb_strtolower(trim($item->status ?? '')))
+                                            @php($itemStatus = array_key_exists($normalizedStatus, $statuses) ? $normalizedStatus : 'niet ingeleverd')
+                                            @if($itemStatus === 'niet ingeleverd')
+                                                <span class="progress-evidence progress-niet-ingeleverd" title="Nog niet ingeleverd" aria-label="Aangemaakt bewijsstuk, nog niet ingeleverd">{{ $item->item_number ?: $loop->iteration }}</span>
+                                            @else
                                             @php($itemLabel = ($item->title ?: 'Bewijsstuk '.$item->item_number).' · '.($statuses[$itemStatus] ?? $itemStatus))
                                             <div class="progress-item"><a href="{{ route('teacher.students.portfolio', $row['student']) }}#bewijs-{{ $item->id }}" class="progress-evidence progress-{{ str_replace(' ', '-', $itemStatus) }}" title="{{ $itemLabel }}" aria-label="{{ $row['student']->displayName() }} · {{ $itemLabel }}">{{ $item->item_number ?: $loop->iteration }}</a>
-                                            @if($row['canReview'] && in_array($item->status, ['ingeleverd', 'niet akkoord'], true))
+                                            @if($row['canReview'] && in_array($itemStatus, ['ingeleverd', 'niet akkoord'], true))
                                                 <form method="POST" action="{{ route('teacher.evidence.review', $item) }}">@csrf @method('PATCH')
                                                     <input type="hidden" name="status" value="nakijken">
                                                     <button type="submit" class="progress-review-button" aria-label="{{ $item->title ?: 'Bewijsstuk' }} van {{ $row['student']->displayName() }} nakijken">Nakijken</button>
                                                 </form>
-                                            @elseif($item->status === 'nakijken')<small class="progress-review-label">Nakijken</small>@endif</div>
+                                            @elseif($itemStatus === 'nakijken')<small class="progress-review-label">Nakijken</small>@endif</div>
+                                            @endif
                                         @empty<span class="progress-dash" aria-label="Geen bewijsstukken">—</span>@endforelse
                                     </div></td>
                                 @endforeach</tr>
