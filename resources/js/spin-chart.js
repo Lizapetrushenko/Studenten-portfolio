@@ -12,13 +12,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const processCodes = Object.keys(chartData);
     const processLabels = JSON.parse(container.getAttribute('data-chart-labels') || '[]');
     const statusColors = {
-        Akkoord: '#22c55e',
-        Ingeleverd: '#f97316',
-        'Bezig': '#fbbf24',
-        'Niet Akkoord': '#dc2626',
-        'Idee': '#d87bd8'
+        akkoord: '#22c55e',
+        ingeleverd: '#f97316',
+        'bezig': '#fbbf24',
+        'niet akkoord': '#dc2626',
+        'idee': '#d87bd8',
+        nakijken: '#4b7fc1'
     };
-    const statuses = ['Akkoord', 'Ingeleverd', 'Bezig', 'Niet Akkoord', 'Idee'];
+    const statuses = ['akkoord', 'ingeleverd', 'bezig', 'niet akkoord', 'idee', 'nakijken'];
     const datasets = statuses.map(status => ({
         label: status.charAt(0).toUpperCase() + status.slice(1),
         data: processCodes.map(code => chartData[code][status] || 0),

@@ -23,7 +23,7 @@ class GroupProgressTest extends TestCase
             $portfolio->evidence()->create(['title' => $title, 'status' => $status, 'work_process' => '1', 'category' => 'Project', 'item_number' => 1]);
         }
         $url = route('teacher.groups.progress', $group);
-        $this->actingAs($teacher)->get($url)->assertOk()->assertSee('K1W1')->assertSee('Plan document')->assertSee('Akkoord document')->assertDontSee('Prive idee')->assertDontSee('Concept document');
+        $this->actingAs($teacher)->get($url)->assertOk()->assertSee('K1W1')->assertDontSee('progress-review-button')->assertSee('Plan document')->assertSee('Akkoord document')->assertDontSee('Prive idee')->assertDontSee('Concept document');
         $this->get($url.'?status=akkoord')->assertOk()->assertSee('Akkoord document')->assertDontSee('Plan document');
         $this->get($url.'?zoek=onbekend')->assertOk()->assertSee('Geen studenten gevonden met deze filters.')->assertDontSee('Plan document');
         $this->get($url.'?zoek=anna&status=ingeleverd')->assertOk()->assertSee('Plan document')->assertDontSee('Akkoord document');
@@ -73,6 +73,34 @@ class GroupProgressTest extends TestCase
         $this->patch($url, ['status' => 'akkoord'])->assertRedirect();
         $this->patch($url, ['status' => 'nakijken'])->assertStatus(422);
         $this->assertSame('akkoord', $item->fresh()->status);
+    }
+    public function test_student_sees_teacher_statuses_and_chart_counts_without_being_able_to_approve(): void
+    {
+        $teacher = User::factory()->create(['role' => 'teacher']);
+        $group = $teacher->teachingGroups()->create(['name' => 'SD2B']);
+        $group->workProcesses()->create(['number' => 1, 'name' => 'Plannen']);
+        $student = User::factory()->create(['role' => 'student']);
+        $student->groups()->sync([$group->id]);
+        $portfolio = $student->portfolios()->create(['title' => 'Portfolio', 'study' => 'BBL']);
+        foreach (['akkoord', 'niet akkoord', 'nakijken'] as $index => $status) {
+            $item = $portfolio->evidence()->create(['title' => 'Bewijs '.$index, 'status' => $status, 'idea' => 'Oud idee', 'work_process' => '1', 'category' => 'Project', 'item_number' => $index + 1]);
+            if ($status === 'niet akkoord') $rejected = $item;
+        }
+        $this->actingAs($student)->get('/dashboard')->assertOk()
+            ->assertSee('<option value="akkoord" selected>Akkoord</option>', false)
+            ->assertSee('<option value="niet akkoord" selected>Niet akkoord</option>', false)
+            ->assertSee('<option value="nakijken" selected>Nakijken</option>', false)
+            ->assertViewHas('spinChartData', function ($json) {
+                $counts = json_decode($json, true)[1];
+                return $counts['akkoord'] === 1 && $counts['niet akkoord'] === 1 && $counts['nakijken'] === 1 && $counts['idee'] === 0;
+            });
+        $url = route('evidence.update', $rejected);
+        $this->patch($url, ['status' => 'akkoord'])->assertSessionHasErrors('status');
+        $this->assertSame('niet akkoord', $rejected->fresh()->status);
+        $this->patch($url, ['status' => 'niet akkoord', 'note' => 'Mijn notitie'])->assertSessionHasNoErrors()->assertRedirect();
+        $this->assertSame('niet akkoord', $rejected->fresh()->status);
+        $this->patch($url, ['status' => 'ingeleverd'])->assertSessionHasNoErrors()->assertRedirect();
+        $this->assertSame('ingeleverd', $rejected->fresh()->status);
     }
     public function test_progress_is_protected_by_login_role_and_group_ownership(): void
     {

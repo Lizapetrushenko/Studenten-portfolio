@@ -53,7 +53,8 @@ class PortfolioController extends Controller
                 'ingeleverd' => $processEvidence->where('status', 'ingeleverd')->count(),
                 'bezig' => $processEvidence->where('status', 'bezig')->count(),
                 'niet akkoord' => $processEvidence->where('status', 'niet akkoord')->count(),
-                'idee' => $processEvidence->filter(fn (Evidence $item) => $item->status === 'idee' || filled($item->idea))->count(),
+                'idee' => $processEvidence->where('status', 'idee')->count(),
+                'nakijken' => $processEvidence->where('status', 'nakijken')->count(),
             ];
 
             $chartData[$code] = $counts;
@@ -73,7 +74,8 @@ class PortfolioController extends Controller
             'niet akkoord' => $portfolio->evidence->where('status', 'niet akkoord')->count(),
             'ingeleverd' => $portfolio->evidence->where('status', 'ingeleverd')->count(),
             'bezig' => $portfolio->evidence->where('status', 'bezig')->count(),
-            'idee' => $portfolio->evidence->filter(fn (Evidence $item) => $item->status === 'idee' || filled($item->idea))->count(),
+            'idee' => $portfolio->evidence->where('status', 'idee')->count(),
+            'nakijken' => $portfolio->evidence->where('status', 'nakijken')->count(),
         ];
     }
 
@@ -138,7 +140,7 @@ class PortfolioController extends Controller
             'idea' => ['nullable', 'string', 'max:2000'],
             'note' => ['nullable', 'string', 'max:2000'],
             'submitted_where' => ['nullable', 'string', 'max:255'],
-            'status' => ['required', 'in:idee,bezig,ingeleverd'],
+            'status' => ['required', \Illuminate\Validation\Rule::in(array_merge(['idee', 'bezig', 'ingeleverd'], in_array($evidence->status, ['nakijken', 'niet akkoord'], true) ? [$evidence->status] : []))],
             'is_completed' => ['nullable', 'boolean'],
             'file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,doc,docx', 'max:5120'],
         ]);

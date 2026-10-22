@@ -84,7 +84,7 @@
                                     <span class="legend-item"><i class="legend-dot" style="background:#dc2626"></i>niet akkoord</span>
                                     <span class="legend-item"><i class="legend-dot" style="background:#f97316"></i>ingeleverd</span>
                                     <span class="legend-item"><i class="legend-dot" style="background:#fbbf24"></i>bezig</span>
-                                    <span class="legend-item"><i class="legend-dot" style="background:#d87bd8"></i>idee</span>
+                                    <span class="legend-item"><i class="legend-dot" style="background:#d87bd8"></i>idee</span><span class="legend-item"><i class="legend-dot" style="background:#4b7fc1"></i>nakijken</span>
                                 </div>
                             </div>
                         @else
@@ -152,7 +152,7 @@
                                     <form method="POST" action="{{ route('evidence.update', $item) }}" class="plan-row" enctype="multipart/form-data">@csrf @method('PATCH')
                                     <div class="plan-number">{{ $item->item_number }}</div>
                                     <div class="plan-main"><label class="evidence-name">Naam van bewijsstuk<input name="title" value="{{ $item->title }}" placeholder="Schrijf de naam van je bewijsstuk..." @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')></label></div>
-                                    <div class="plan-fields"><label><span class="info-label">Status bewijsstuk</span><select name="status" @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')><option value="idee" @selected($item->status === 'idee')>Idee</option><option value="bezig" @selected($item->status === 'bezig')>Bezig</option><option value="ingeleverd" @selected($item->status === 'ingeleverd')>Ingeleverd</option></select></label></div>
+                                    <div class="plan-fields"><label><span class="info-label">Status bewijsstuk</span><select name="status" @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')>@if(in_array($item->status, ['akkoord', 'niet akkoord', 'nakijken'], true))<option value="{{ $item->status }}" selected>{{ ucfirst($item->status) }}</option>@endif<option value="idee" @selected($item->status === 'idee')>Idee</option><option value="bezig" @selected($item->status === 'bezig')>Bezig</option><option value="ingeleverd" @selected($item->status === 'ingeleverd')>Ingeleverd</option></select></label></div>
                                     <label class="plan-note">Notitie<textarea name="note" rows="2" placeholder="Notitie..." @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')>{{ $item->note }}</textarea></label><label class="submitted-where">Waar ingeleverd? <span>(niet verplicht)</span><input name="submitted_where" value="{{ $item->submitted_where }}" placeholder="Teams, Canvas of SharePoint" @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')></label>
                                     <div class="file-edit">
                                         @if($item->status === 'akkoord' || $portfolioLocked || $submitOnly)

@@ -7,7 +7,7 @@
                 <div><p class="eyebrow">GROEP · {{ $group->name }}</p><h2>Voortgangsoverzicht</h2></div>
                 <span class="count">{{ $rows->count() }} van {{ $group->students->count() }} studenten</span>
             </div>
-            <p>Bekijk de bewijsstukken per student en werkproces. Klik op een nummer om het bewijsstuk te openen. Met Nakijken markeer je een bewijsstuk dat je gaat beoordelen.</p>
+            <p>Bekijk de bewijsstukken per student en werkproces. Klik op een nummer om het bewijsstuk te openen. De beoordeling en de status Nakijken pas je binnen het bewijsstuk aan.</p>
             <form method="GET" action="{{ route('teacher.groups.progress', $group) }}" class="progress-filters">
                 <label>Zoeken op naam<input type="search" name="zoek" value="{{ $search }}" maxlength="120" placeholder="Naam van student"></label>
                 <label>Status<span class="student-select-wrap">
@@ -40,12 +40,7 @@
                                             @else
                                             @php($itemLabel = ($item->title ?: 'Bewijsstuk '.$item->item_number).' · '.($statuses[$itemStatus] ?? $itemStatus))
                                             <div class="progress-item"><a href="{{ route('teacher.students.portfolio', $row['student']) }}#bewijs-{{ $item->id }}" class="progress-evidence progress-{{ str_replace(' ', '-', $itemStatus) }}" title="{{ $itemLabel }}" aria-label="{{ $row['student']->displayName() }} · {{ $itemLabel }}">{{ $item->item_number ?: $loop->iteration }}</a>
-                                            @if($row['canReview'] && in_array($itemStatus, ['ingeleverd', 'niet akkoord'], true))
-                                                <form method="POST" action="{{ route('teacher.evidence.review', $item) }}">@csrf @method('PATCH')
-                                                    <input type="hidden" name="status" value="nakijken">
-                                                    <button type="submit" class="progress-review-button" aria-label="{{ $item->title ?: 'Bewijsstuk' }} van {{ $row['student']->displayName() }} nakijken">Nakijken</button>
-                                                </form>
-                                            @elseif($itemStatus === 'nakijken')<small class="progress-review-label">Nakijken</small>@endif</div>
+                                            </div>
                                             @endif
                                         @empty<span class="progress-dash" aria-label="Geen bewijsstukken">—</span>@endforelse
                                     </div></td>
