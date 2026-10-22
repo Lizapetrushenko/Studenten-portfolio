@@ -1744,3 +1744,30 @@ select:focus {
 .spin-chart-panel .spin-legend-small { justify-content: center; gap: .6rem 1rem; }
 .spin-chart-panel .legend-item { gap: .4rem; font-size: .85rem; line-height: 1.5; }
 .spin-chart-panel .legend-dot { width: 10px; height: 10px; }
+.evidence-delete-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    padding: .5rem .75rem;
+    border: 1px solid #dba5a0;
+    border-radius: 5px;
+    background: #fff0ee;
+    color: #a32b28;
+    font: inherit;
+    font-size: .8rem;
+    font-weight: 600;
+    line-height: 1.5;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.evidence-delete-button:hover {
+    background: #fbe1dd;
+    border-color: #a32b28;
+}
+
+.evidence-delete-button:focus-visible {
+    outline: 2px solid #a32b28;
+    outline-offset: 3px;
+}
