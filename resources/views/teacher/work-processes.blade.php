@@ -1,6 +1,6 @@
 <x-app-layout headerTitle="Werkprocessen beheren">
     <div class="portal-shell space-y-6">
-        <a href="{{ route('teacher.dashboard') }}" class="underline">← Terug naar dashboard</a>
+        <a href="{{ route('teacher.dashboard') }}" class="teacher-link back-button">← Terug naar dashboard</a>
         @if (session('status'))<div class="panel" role="status">{{ session('status') }}</div>@endif
         @if ($errors->any())<div class="panel text-red-700">{{ $errors->first() }}</div>@endif
         <section class="panel">

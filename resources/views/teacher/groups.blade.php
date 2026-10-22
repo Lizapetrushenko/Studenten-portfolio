@@ -1,13 +1,13 @@
 <x-app-layout headerTitle="Groepen">
     <div class="portal-shell space-y-6">
-        <a href="{{ route('teacher.dashboard') }}" class="underline">← Terug naar dashboard</a>
+        <a href="{{ route('teacher.dashboard') }}" class="teacher-link back-button">← Terug naar dashboard</a>
         @if (session('status'))<div class="panel" role="status">{{ session('status') }}</div>@endif
         @if ($errors->any())<div class="panel text-red-700">{{ $errors->first() }}</div>@endif
         <section class="panel">
             <div class="section-title"><div><p class="eyebrow">DOCENT</p><h2>Groep aanmaken</h2></div></div>
-            <form method="POST" action="{{ route('teacher.groups.store') }}" class="form-grid">@csrf
+            <form method="POST" action="{{ route('teacher.groups.store') }}" class="teacher-add-student">@csrf
                 <label>Naam van de groep<input name="name" placeholder="Bijvoorbeeld BOL 2A" required></label>
-                <div class="full"><button class="button">Groep aanmaken</button></div>
+                <button type="submit" class="button">Groep aanmaken</button>
             </form>
         </section>
         <section class="panel">

@@ -83,7 +83,7 @@
                                     <span class="legend-item"><i class="legend-dot" style="background:#22c55e"></i>akkoord</span>
                                     <span class="legend-item"><i class="legend-dot" style="background:#dc2626"></i>niet akkoord</span>
                                     <span class="legend-item"><i class="legend-dot" style="background:#f97316"></i>ingeleverd</span>
-                                    <span class="legend-item"><i class="legend-dot" style="background:#fbbf24"></i>in proces</span>
+                                    <span class="legend-item"><i class="legend-dot" style="background:#fbbf24"></i>bezig</span>
                                     <span class="legend-item"><i class="legend-dot" style="background:#d87bd8"></i>idee</span>
                                 </div>
                             </div>
@@ -152,7 +152,7 @@
                                     <form method="POST" action="{{ route('evidence.update', $item) }}" class="plan-row" enctype="multipart/form-data">@csrf @method('PATCH')
                                     <div class="plan-number">{{ $item->item_number }}</div>
                                     <div class="plan-main"><label class="evidence-name">Naam van bewijsstuk<input name="title" value="{{ $item->title }}" placeholder="Schrijf de naam van je bewijsstuk..." @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')></label><label class="idea-label">Idee van bewijsstuk<input name="idea" value="{{ $item->idea }}" placeholder="Schrijf je idee..." @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')></label><div class="idea-actions">@if(!$portfolioLocked && !$submitOnly && $item->status !== 'akkoord')<button class="button tiny-button" type="submit">Opslaan</button>@endif</div></div>
-                                    <div class="plan-fields"><label><span class="info-label">Status bewijsstuk</span><select name="status" @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')><option value="idee" @selected($item->status === 'idee')>Idee</option><option value="in proces" @selected($item->status === 'in proces')>Bezig</option><option value="ingeleverd" @selected($item->status === 'ingeleverd')>Ingeleverd</option></select></label><label class="check-label"><input type="checkbox" name="is_completed" value="1" @checked($item->is_completed) @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')> Gemaakt</label></div>
+                                    <div class="plan-fields"><label><span class="info-label">Status bewijsstuk</span><select name="status" @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')><option value="idee" @selected($item->status === 'idee')>Idee</option><option value="bezig" @selected($item->status === 'bezig')>Bezig</option><option value="ingeleverd" @selected($item->status === 'ingeleverd')>Ingeleverd</option></select></label><label class="check-label"><input type="checkbox" name="is_completed" value="1" @checked($item->is_completed) @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')> Gemaakt</label></div>
                                     <label class="plan-note">Notitie<textarea name="note" rows="2" placeholder="Notitie..." @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')>{{ $item->note }}</textarea></label><label class="submitted-where">Waar ingeleverd? <span>(niet verplicht)</span><input name="submitted_where" value="{{ $item->submitted_where }}" placeholder="Teams, Canvas of SharePoint" @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')></label>
                                     <div class="file-edit">
                                         @if($item->status === 'akkoord' || $portfolioLocked || $submitOnly)
@@ -181,7 +181,7 @@
                                 <input type="hidden" name="work_process" value="{{ $process['code'] }}">
                                 <label>Naam bewijsstuk<input name="title" required placeholder="Naam van jouw bewijsstuk"></label>
                                 <label>Type<select name="category"><option>Stageproject</option><option>Schoolproject</option><option>Keuzedeel</option><option>Iets anders</option></select></label>
-                                <label>Status<select name="status"><option value="idee">Idee</option><option value="in proces">Bezig</option><option value="ingeleverd" selected>Ingeleverd</option></select></label>
+                                <label>Status<select name="status"><option value="idee">Idee</option><option value="bezig">Bezig</option><option value="ingeleverd" selected>Ingeleverd</option></select></label>
                                 <label>Bestand <span>(PDF, Word of afbeelding; niet verplicht)</span><input type="file" name="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"></label>
                                 <button class="button tiny-button" type="submit">Bewijsstuk toevoegen</button>
                             </form>

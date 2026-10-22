@@ -63,6 +63,7 @@ Route::middleware(['auth', 'verified', 'role:teacher'])->prefix('docent')->name(
     Route::get('/groepen/{group}', [TeacherController::class, 'showGroup'])->name('groups.show');
     Route::get('/studenten', [TeacherController::class, 'students'])->name('students.index');
     Route::get('/studenten/{student}', [TeacherController::class, 'showStudent'])->name('students.show');
+    Route::get('/groepen/{group}/voortgang', [TeacherController::class, 'groupProgress'])->name('groups.progress');
     Route::get('/groepen/{group}/instellingen', [TeacherController::class, 'showGroupSettings'])->name('groups.settings');
     Route::post('/groepen/{group}/werkprocessen', [TeacherController::class, 'storeGroupWorkProcess'])->name('groups.work-processes.store');
     Route::patch('/groepen/{group}/werkprocessen/{workProcess}', [TeacherController::class, 'updateGroupWorkProcess'])->name('groups.work-processes.update');

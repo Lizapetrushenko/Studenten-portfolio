@@ -12,13 +12,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const processCodes = Object.keys(chartData);
     const processLabels = JSON.parse(container.getAttribute('data-chart-labels') || '[]');
     const statusColors = {
-        akkoord: '#22c55e',
-        ingeleverd: '#f97316',
-        'in proces': '#fbbf24',
-        'niet akkoord': '#dc2626',
-        idee: '#d87bd8'
+        Akkoord: '#22c55e',
+        Ingeleverd: '#f97316',
+        'Bezig': '#fbbf24',
+        'Niet Akkoord': '#dc2626',
+        'Idee': '#d87bd8'
     };
-    const statuses = ['akkoord', 'ingeleverd', 'in proces', 'niet akkoord', 'idee'];
+    const statuses = ['Akkoord', 'Ingeleverd', 'Bezig', 'Niet Akkoord', 'Idee'];
     const datasets = statuses.map(status => ({
         label: status.charAt(0).toUpperCase() + status.slice(1),
         data: processCodes.map(code => chartData[code][status] || 0),
@@ -42,8 +42,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 r: {
                     beginAtZero: true,
                     max: 5,
-                    ticks: { stepSize: 1, font: { size: 8 } },
-                    pointLabels: { font: { size: 8 } },
+                    ticks: { stepSize: 1, color: '#52616b', font: { size: 11 } },
+                    pointLabels: { color: '#17211f', padding: 8, font: { size: 12, weight: '600' } },
                     grid: { color: '#e5e7eb' }
                 }
             },

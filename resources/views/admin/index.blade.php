@@ -12,7 +12,7 @@
             </div>
         </section>
         <nav class="flex flex-wrap gap-2" aria-label="Admin schermen" x-show="section !== 'dashboard'">
-            <button class="button tiny-button" type="button" @click="section = 'dashboard'">← Dashboard</button>
+            <button class="teacher-link back-button" type="button" @click="section = 'dashboard'">← Dashboard</button>
             <button class="button tiny-button" type="button" @click="section = 'teachers'">Docenten</button>
             <button class="button tiny-button" type="button" @click="section = 'students'">Studenten</button>
             <button class="button tiny-button" type="button" @click="section = 'groups'">Groepen</button>

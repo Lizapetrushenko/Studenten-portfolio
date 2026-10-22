@@ -51,7 +51,7 @@ class PortfolioController extends Controller
             $counts = [
                 'akkoord' => $processEvidence->where('status', 'akkoord')->count(),
                 'ingeleverd' => $processEvidence->where('status', 'ingeleverd')->count(),
-                'in proces' => $processEvidence->where('status', 'in proces')->count(),
+                'bezig' => $processEvidence->where('status', 'bezig')->count(),
                 'niet akkoord' => $processEvidence->where('status', 'niet akkoord')->count(),
                 'idee' => $processEvidence->filter(fn (Evidence $item) => $item->status === 'idee' || filled($item->idea))->count(),
             ];
@@ -72,7 +72,7 @@ class PortfolioController extends Controller
             'akkoord' => $portfolio->evidence->where('status', 'akkoord')->count(),
             'niet akkoord' => $portfolio->evidence->where('status', 'niet akkoord')->count(),
             'ingeleverd' => $portfolio->evidence->where('status', 'ingeleverd')->count(),
-            'in proces' => $portfolio->evidence->where('status', 'in proces')->count(),
+            'bezig' => $portfolio->evidence->where('status', 'bezig')->count(),
             'idee' => $portfolio->evidence->filter(fn (Evidence $item) => $item->status === 'idee' || filled($item->idea))->count(),
         ];
     }
@@ -110,7 +110,7 @@ class PortfolioController extends Controller
             'title' => ['required', 'string', 'max:120'],
             'work_process' => ['required', 'integer', 'min:1'],
             'category' => ['required', 'string', 'max:60'],
-            'status' => ['required', 'in:idee,in proces,ingeleverd'],
+            'status' => ['required', 'in:idee,bezig,ingeleverd'],
             'description' => ['nullable', 'string', 'max:1000'],
             'submitted_where' => ['nullable', 'string', 'max:255'],
             'url' => ['nullable', 'url', 'max:500'],
@@ -138,7 +138,7 @@ class PortfolioController extends Controller
             'idea' => ['nullable', 'string', 'max:2000'],
             'note' => ['nullable', 'string', 'max:2000'],
             'submitted_where' => ['nullable', 'string', 'max:255'],
-            'status' => ['required', 'in:idee,in proces,ingeleverd'],
+            'status' => ['required', 'in:idee,bezig,ingeleverd'],
             'is_completed' => ['nullable', 'boolean'],
             'file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,doc,docx', 'max:5120'],
         ]);

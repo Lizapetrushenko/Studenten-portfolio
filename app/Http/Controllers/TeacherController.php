@@ -71,6 +71,32 @@ class TeacherController extends Controller
         return view('teacher.group', compact('group', 'availableStudents'));
     }
 
+    public function groupProgress(Request $request, Group $group): View
+    {
+        $this->authorizeGroup($request, $group);
+        $filters = $request->validate([
+            'zoek' => ['nullable', 'string', 'max:120'],
+            'status' => ['nullable', 'in:niet akkoord,ingeleverd,akkoord,nakijken'],
+        ]);
+        $search = trim($filters['zoek'] ?? '');
+        $status = $filters['status'] ?? '';
+        $statuses = ['niet akkoord' => 'Niet akkoord', 'ingeleverd' => 'Ingeleverd', 'akkoord' => 'Akkoord', 'nakijken' => 'Nakijken'];
+        $group->load(['workProcesses', 'students.portfolios.evidence', 'students.groups.workProcesses', 'students.reviewers']);
+        $processes = $group->lifecycle_status === null
+            ? $group->workProcesses
+            : $group->students->flatMap(fn ($student) => $student->groups->whereNull('lifecycle_status')->flatMap->workProcesses)->unique('number')->sortBy('number')->values();
+        $rows = $group->students->sortBy(fn ($student) => mb_strtolower($student->displayName()))
+            ->filter(fn ($student) => $search === '' || str_contains(mb_strtolower($student->displayName().' '.$student->name), mb_strtolower($search)))
+            ->map(function ($student) use ($processes, $status, $statuses, $request) {
+                $portfolio = $student->portfolios->first();
+                $evidence = ($portfolio?->evidence ?? collect())->filter(fn ($item) => array_key_exists($item->status ?? '', $statuses)
+                    && $processes->contains(fn ($process) => (string) $process->number === (string) $item->work_process))
+                    ->filter(fn ($item) => $status === '' || ($item->status ?: 'niet bekeken') === $status);
+                return ['student' => $student, 'portfolio' => $portfolio, 'evidence' => $evidence->groupBy('work_process'), 'count' => $evidence->count(), 'canReview' => $student->groups->contains('teacher_id', $request->user()->id) || $student->reviewers->contains('id', $request->user()->id)];
+            })->filter(fn ($row) => $status === '' || $row['count'] > 0)->values();
+
+        return view('teacher.group-progress', compact('group', 'processes', 'rows', 'search', 'status', 'statuses'));
+    }
     public function showGroupSettings(Request $request, Group $group): View
     {
         $this->authorizeGroup($request, $group);
@@ -141,9 +167,10 @@ class TeacherController extends Controller
         abort_if($evidence->status === 'idee', 404, 'Ideeën zijn alleen zichtbaar voor de student.');
         abort_if($evidence->status === 'akkoord', 422, 'Een akkoord bewijsstuk kan niet opnieuw worden beoordeeld.');
         $data = $request->validate([
-            'status' => ['required', 'in:akkoord,niet akkoord'],
+            'status' => ['required', 'in:akkoord,niet akkoord,nakijken'],
             'feedback' => ['nullable', 'string', 'max:2000'],
         ]);
+        abort_if($data['status'] === 'nakijken' && !in_array($evidence->status, ['ingeleverd', 'niet akkoord', 'nakijken'], true), 422, 'Alleen ingeleverde of afgekeurde bewijsstukken kunnen worden nagekeken.');
         $evidence->update($data);
         return back()->with('status', 'Beoordeling opgeslagen.');
     }
@@ -166,6 +193,10 @@ class TeacherController extends Controller
             'reviewer_ids' => ['required', 'array', 'min:2'],
             'reviewer_ids.*' => ['integer', 'exists:users,id'],
             'study_type' => ['required', 'in:BOL,BBL,Flex'],
+        ], [
+            'reviewer_ids.required' => 'Selecteer minimaal twee beoordelaars.',
+            'reviewer_ids.min' => 'Selecteer minimaal twee beoordelaars.',
+            'reviewer_ids.array' => 'Selecteer beoordelaars uit de lijst.',
         ]);
         $allowedGroups = $request->user()->teachingGroups()->pluck('id')->map(fn ($id) => (int) $id)->all();
         $selectedGroups = array_map('intval', $data['group_ids'] ?? []);
