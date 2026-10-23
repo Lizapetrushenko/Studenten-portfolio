@@ -2494,3 +2494,33 @@ select:focus {
     outline: 2px solid var(--interaction-blue);
     outline-offset: 3px;
 }
+.auth-secondary-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: .65rem 1rem;
+    border: 1px solid #302d73;
+    border-radius: 5px;
+    background: #fff;
+    color: #302d73;
+    font-size: .85rem;
+    font-weight: 600;
+    line-height: 1.5;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color .15s ease, color .15s ease;
+}
+.auth-secondary-action:hover {
+    background: #302d73;
+    color: #fff;
+    text-decoration: none;
+}
+.auth-secondary-action:focus-visible {
+    outline: 2px solid #2458a6;
+    outline-offset: 3px;
+}
+@media (max-width: 400px) {
+    .auth-actions { flex-wrap: wrap; }
+}
+.register-link.auth-secondary-action { width: auto; max-width: 100%; }

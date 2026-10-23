@@ -28,7 +28,7 @@
 
         <div class="auth-actions">
             @if (Route::has('password.request'))
-                <a class="forgot-link" href="{{ route('password.request') }}">
+                <a class="forgot-link auth-secondary-action" href="{{ route('password.request') }}">
                     Wachtwoord vergeten?
                 </a>
             @endif
@@ -51,6 +51,6 @@
 </a>
 </div>
     <div class="register-container">
-        <a class="register-link" href="{{ route('register') }}">Nog geen account?</a>
+        <a class="register-link auth-secondary-action" href="{{ route('register') }}">Nog geen account?</a>
     </div>
 </x-guest-layout>
