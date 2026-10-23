@@ -30,29 +30,34 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        $emailPrefix = explode('@', mb_strtolower(trim((string) $request->input('email'))), 2)[0] ?? '';
+        $request->merge(['student_number' => $emailPrefix]);
+
+        $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:120'],
             'last_name' => ['required', 'string', 'max:120'],
             'preferred_name' => ['nullable', 'string', 'max:120'],
-            'student_number' => ['nullable', 'string', 'max:40', 'unique:users,student_number'],
+            'student_number' => ['required', 'string', 'max:40', 'unique:users,student_number'],
             'username' => ['nullable', 'alpha_dash', 'max:50', 'unique:'.User::class],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'leerweg' => ['required', 'in:BOL,BBL,FLEX'],
+        ], [
+            'student_number.unique' => 'Het deel vóór @ van dit e-mailadres is al als studentnummer in gebruik.',
         ]);
 
-        $name = trim($request->first_name.' '.$request->last_name);
+        $name = trim($validated['first_name'].' '.$validated['last_name']);
         $user = User::create([
             'name' => $name,
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'preferred_name' => $request->preferred_name ?: $request->first_name,
-            'student_number' => $request->student_number,
-            'username' => $request->username ?: strtolower(str_replace(' ', '-', $name)) . '-' . substr(md5($request->email), 0, 6),
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'leerweg' => $request->leerweg,
-            'study_type' => $request->leerweg === 'FLEX' ? 'Flex' : $request->leerweg,
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
+            'preferred_name' => $validated['preferred_name'] ?: $validated['first_name'],
+            'student_number' => $validated['student_number'],
+            'username' => ($validated['username'] ?? null) ?: strtolower(str_replace(' ', '-', $name)) . '-' . substr(md5($validated['email']), 0, 6),
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'leerweg' => $validated['leerweg'],
+            'study_type' => $validated['leerweg'] === 'FLEX' ? 'Flex' : $validated['leerweg'],
         ]);
 
         event(new Registered($user));

@@ -160,7 +160,7 @@ class TeacherController extends Controller
     {
         $student = $evidence->portfolio->user;
         abort_unless($student->isStudent() && ($student->groups()->where('teacher_id', $request->user()->id)->exists() || $student->reviewers()->whereKey($request->user()->id)->exists()), 404);
-        abort_if($evidence->status === 'idee', 404, 'Ideeën zijn alleen zichtbaar voor de student.');
+        abort_unless(in_array($evidence->status, ['ingeleverd', 'niet akkoord'], true), 404, 'Alleen ingeleverde bewijsstukken kunnen worden beoordeeld.');
         abort_if($evidence->status === 'akkoord', 422, 'Een akkoord bewijsstuk kan niet opnieuw worden beoordeeld.');
         $data = $request->validate([
             'status' => ['required', 'in:akkoord,niet akkoord'],
