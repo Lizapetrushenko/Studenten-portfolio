@@ -1,9 +1,8 @@
 <x-app-layout headerTitle="Admin panel">
-    <div class="portal-shell space-y-6" x-data="{ section: 'dashboard' }">
-        @if (session('status'))<div class="panel" role="status">{{ session('status') }}</div>@endif
+    <div class="portal-shell space-y-6" x-data="{ section: ['dashboard', 'teachers', 'students', 'groups'].includes(new URLSearchParams(window.location.search).get('section')) ? new URLSearchParams(window.location.search).get('section') : 'dashboard' }" x-init="$watch('section', value => { const url = new URL(window.location.href); if (value === 'dashboard') url.searchParams.delete('section'); else url.searchParams.set('section', value); window.history.replaceState({}, '', url); })">
         @if ($errors->any())<div class="panel text-red-700">{{ $errors->first() }}</div>@endif
 
-        <section class="panel" style="border: 1px solid var(--accent);" x-show="section === 'dashboard'">
+        <section class="panel admin-dashboard-panel" style="border: 1px solid var(--accent);" x-show="section === 'dashboard'">
             <div class="section-title"><div><p class="eyebrow">BEHEER</p><h2>Admin dashboard</h2></div></div>
             <div class="screen-grid">
                 <button type="button" class="screen-card text-left" @click="section = 'teachers'"><span class="tag">{{ $teachers->count() }} accounts</span><h2>Docenten</h2><p>Docenten toevoegen en beheren.</p><strong>Openen →</strong></button>
@@ -55,26 +54,48 @@
 
         <section class="panel" style="border: 1px solid var(--accent);" x-show="section === 'groups'" x-cloak>
             <div class="section-title"><div><p class="eyebrow">GROEPEN</p><h2>Alle groepen</h2></div><span class="count">{{ $groups->count() }} groepen</span></div>
-            <div class="overflow-x-auto"><table class="w-full text-left"><thead><tr><th class="p-3">Groep</th><th class="p-3">Docent</th><th class="p-3">Studenten</th></tr></thead><tbody>
-                @forelse($groups as $group)<tr class="border-t"><td class="p-3 font-semibold">{{ $group->name }}</td><td class="p-3">{{ $group->teacher?->name ?? 'Nog niet toegewezen' }}</td><td class="p-3">{{ $group->students_count }}</td></tr>
-                @empty<tr><td class="p-3" colspan="3">Er zijn nog geen groepen.</td></tr>@endforelse
-            </tbody></table></div>
+            <div x-data="{ search: '' }">
+                <label class="mb-5 block">Zoeken op groepsnaam<input type="search" x-model="search" placeholder="Zoeken op naam" aria-label="Zoeken op groepsnaam"></label>
+                <div class="screen-grid">
+                    @forelse($groups as $group)
+                        <a x-show="!search || @js(mb_strtolower($group->name)).includes(search.toLocaleLowerCase())" class="screen-card text-center" href="{{ route('admin.groups.show', $group) }}">
+                            @if($group->lifecycle_status)<x-group-status-photo :status="$group->lifecycle_status" size="h-36 w-36 mb-3" />@elseif($group->photo_path)<img src="{{ asset('storage/'.$group->photo_path) }}" alt="Foto van {{ $group->name }}" class="mx-auto mb-3 h-36 w-36 rounded-full object-cover">@else<div class="group-photo-placeholder mx-auto mb-3" aria-hidden="true"></div>@endif
+                            <span class="tag">{{ $group->students_count }} studenten</span><h2>{{ $group->name }}</h2><p>{{ $group->teacher?->name ?? 'Nog geen docent toegewezen' }}</p><strong>Groep openen →</strong>
+                        </a>
+                    @empty<p>Er zijn nog geen groepen.</p>@endforelse
+                </div>
+                <p class="mt-4" x-show="search && ![...$el.parentElement.querySelectorAll('a.screen-card')].some(card => card.style.display !== 'none')" x-cloak>Geen groepen gevonden.</p>
+            </div>
         </section>
 
         <section class="panel" style="border: 1px solid var(--accent);" x-show="section === 'teachers'" x-cloak>
             <div class="section-title"><div><p class="eyebrow">DOCENTEN</p><h2>Docentenlijst</h2></div><span class="count">{{ $teachers->count() }} docenten</span></div>
-            <div class="overflow-x-auto"><table class="w-full text-left"><thead><tr><th class="p-3">Naam</th><th class="p-3">E-mail</th><th class="p-3">Groepen</th><th class="p-3">Actie</th></tr></thead><tbody>
-                @forelse($teachers as $teacher)<tr class="border-t"><td class="p-3">{{ $teacher->name }}</td><td class="p-3">{{ $teacher->email }}</td><td class="p-3">{{ $teacher->teaching_groups_count }}</td><td class="p-3"><form method="POST" action="{{ route('admin.users.destroy', $teacher) }}" onsubmit="return confirm('Dit docentaccount verwijderen?')">@csrf @method('DELETE')<button class="text-red-700 underline">Verwijderen</button></form></td></tr>
-                @empty<tr><td class="p-3" colspan="4">Er zijn nog geen docenten.</td></tr>@endforelse
+            <div class="overflow-x-auto"><table class="w-full text-left"><thead><tr><th class="p-3">Naam</th><th class="p-3">E-mail</th><th class="p-3">Groepen</th></tr></thead><tbody>
+                @forelse($teachers as $teacher)<tr class="border-t"><td class="p-3"><a class="underline" href="{{ route('admin.teachers.show', $teacher) }}">{{ $teacher->name }}</a></td><td class="p-3">{{ $teacher->email }}</td><td class="p-3">{{ $teacher->teaching_groups_count }}</td></tr>
+                @empty<tr><td class="p-3" colspan="3">Er zijn nog geen docenten.</td></tr>@endforelse
             </tbody></table></div>
         </section>
 
         <section class="panel" style="border: 1px solid var(--accent);" x-show="section === 'students'" x-cloak>
-            <div class="section-title"><div><p class="eyebrow">STUDENTEN</p><h2>Studentenlijst</h2></div><span class="count">{{ $students->count() }} studenten</span></div>
-            <div class="overflow-x-auto"><table class="w-full text-left"><thead><tr><th class="p-3">Studentnummer</th><th class="p-3">Voornaam</th><th class="p-3">Achternaam</th><th class="p-3">Roepnaam</th><th class="p-3">E-mail</th><th class="p-3">Leerweg</th><th class="p-3">Groepen</th><th class="p-3">Beoordelaars</th><th class="p-3">Actie</th></tr></thead><tbody>
-                @forelse($students as $student)<tr class="border-t align-top"><td class="p-3">{{ $student->student_number ?: '—' }}</td><td class="p-3">{{ $student->first_name ?: '—' }}</td><td class="p-3">{{ $student->last_name ?: '—' }}</td><td class="p-3">{{ $student->preferred_name ?: '—' }}</td><td class="p-3">{{ $student->email }}</td><td class="p-3">{{ $student->study_type ?: '—' }}</td><td class="p-3">{{ $student->groups->pluck('name')->join(', ') ?: '—' }}</td><td class="p-3">{{ $student->reviewers->pluck('name')->join(', ') ?: 'Nog niet gekoppeld' }}</td><td class="p-3"><form method="POST" action="{{ route('admin.students.group', $student) }}" class="space-y-2">@csrf @method('PATCH')<select name="group_ids[]" aria-label="Groepen voor {{ $student->name }}" multiple size="4" class="min-w-40">@foreach($groups as $group)<option value="{{ $group->id }}" @selected($student->groups->contains('id', $group->id))>{{ $group->name }}</option>@endforeach</select><button class="button tiny-button">Groepen opslaan</button></form><form class="mt-3" method="POST" action="{{ route('admin.users.destroy', $student) }}" onsubmit="return confirm('Dit studentaccount verwijderen?')">@csrf @method('DELETE')<button class="text-red-700 underline">Verwijderen</button></form></td></tr>
-                @empty<tr><td class="p-3" colspan="9">Er zijn nog geen studenten.</td></tr>@endforelse
-            </tbody></table></div>
+            <div class="section-title"><div><p class="eyebrow">BEHEER</p><h2>Lijst van studenten</h2></div><span class="count">{{ $students->count() }} studenten</span></div>
+            <div x-data="{ search: '', group: '', reviewer: '' }">
+                <div class="student-list-filters">
+                    <label>Zoeken op naam<input type="search" x-model="search" placeholder="Zoeken op naam"></label>
+                    <label>Filter op groep<select x-model="group"><option value="">Alle groepen</option>@foreach($groups as $group)<option value="{{ $group->id }}">{{ $group->name }}</option>@endforeach</select></label>
+                    <label>Filter op beoordelaar<select x-model="reviewer"><option value="">Alle beoordelaars</option>@foreach($teachers as $teacher)<option value="{{ $teacher->id }}">{{ $teacher->name }}</option>@endforeach</select></label>
+                </div>
+                <div class="overflow-x-auto"><table class="student-list-table"><thead><tr><th>Naam</th><th>Groepen</th><th>Beoordelaars</th><th>Beheer</th></tr></thead><tbody>
+                    @forelse($students as $student)
+                        <tr x-show="(!search || @js(mb_strtolower($student->displayName().' '.$student->email.' '.$student->student_number)).includes(search.toLocaleLowerCase())) && (!group || @js($student->groups->pluck('id')->map(fn ($id) => (string) $id)->all()).includes(group)) && (!reviewer || @js($student->reviewers->pluck('id')->map(fn ($id) => (string) $id)->all()).includes(reviewer))">
+                            <td><strong><a class="underline" href="{{ route('admin.students.show', $student) }}">{{ $student->displayName() }}</a></strong><small>{{ $student->email }} · {{ $student->student_number ?: 'Geen studentnummer' }} · {{ $student->study_type ?: 'Geen opleidingstype' }}</small></td>
+                            <td>{{ $student->groups->pluck('name')->join(', ') ?: 'Nog geen groep' }}</td>
+                            <td>{{ $student->reviewers->pluck('name')->join(', ') ?: 'Nog niet gekoppeld' }}</td>
+                            <td><details><summary class="cursor-pointer underline">Groepen wijzigen</summary><form method="POST" action="{{ route('admin.students.group', $student) }}" class="mt-3 space-y-2">@csrf @method('PATCH')<select name="group_ids[]" aria-label="Groepen voor {{ $student->name }}" multiple size="4" class="min-w-40">@foreach($groups as $group)<option value="{{ $group->id }}" @selected($student->groups->contains('id', $group->id))>{{ $group->name }}</option>@endforeach</select><button class="button tiny-button">Opslaan</button></form></details></td>
+                        </tr>
+                    @empty<tr><td colspan="4">Er zijn nog geen studenten.</td></tr>@endforelse
+                </tbody></table></div>
+                <p class="mt-4" x-show="(search || group || reviewer) && ![...$el.parentElement.querySelectorAll('tbody tr')].some(row => row.style.display !== 'none')" x-cloak>Geen studenten gevonden met deze filters.</p>
+            </div>
         </section>
     </div>
 </x-app-layout>
