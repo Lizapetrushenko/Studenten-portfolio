@@ -85,15 +85,19 @@ class GroupProgressTest extends TestCase
         foreach (['akkoord', 'niet akkoord', 'nakijken'] as $index => $status) {
             $item = $portfolio->evidence()->create(['title' => 'Bewijs '.$index, 'status' => $status, 'idea' => 'Oud idee', 'work_process' => '1', 'category' => 'Project', 'item_number' => $index + 1]);
             if ($status === 'niet akkoord') $rejected = $item;
+            if ($status === 'nakijken') $underReview = $item;
         }
         $this->actingAs($student)->get('/dashboard')->assertOk()
             ->assertSee('<option value="akkoord" selected>Akkoord</option>', false)
             ->assertSee('<option value="niet akkoord" selected>Niet akkoord</option>', false)
-            ->assertSee('<option value="nakijken" selected>Nakijken</option>', false)
+            ->assertDontSee('Nakijken')->assertDontSee('value="nakijken"', false)
             ->assertViewHas('spinChartData', function ($json) {
                 $counts = json_decode($json, true)[1];
-                return $counts['akkoord'] === 1 && $counts['niet akkoord'] === 1 && $counts['nakijken'] === 1 && $counts['idee'] === 0;
+                return $counts['akkoord'] === 1 && $counts['niet akkoord'] === 1 && $counts['ingeleverd'] === 1 && !array_key_exists('nakijken', $counts) && $counts['idee'] === 0;
             });
+        $this->patch(route('evidence.update', $underReview), ['status' => 'ingeleverd', 'note' => 'Bijgewerkte notitie'])->assertSessionHasNoErrors()->assertRedirect();
+        $this->assertSame('nakijken', $underReview->fresh()->status);
+        $this->patch(route('evidence.update', $underReview), ['status' => 'nakijken'])->assertSessionHasErrors('status');
         $url = route('evidence.update', $rejected);
         $this->patch($url, ['status' => 'akkoord'])->assertSessionHasErrors('status');
         $this->assertSame('niet akkoord', $rejected->fresh()->status);

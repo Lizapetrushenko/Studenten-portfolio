@@ -58,7 +58,7 @@
                                     <span class="legend-item"><i class="legend-dot" style="background:#dc2626"></i>niet akkoord</span>
                                     <span class="legend-item"><i class="legend-dot" style="background:#f97316"></i>ingeleverd</span>
                                     <span class="legend-item"><i class="legend-dot" style="background:#fbbf24"></i>bezig</span>
-                                    <span class="legend-item"><i class="legend-dot" style="background:#d87bd8"></i>idee</span><span class="legend-item"><i class="legend-dot" style="background:#4b7fc1"></i>nakijken</span>
+                                    <span class="legend-item"><i class="legend-dot" style="background:#d87bd8"></i>idee</span>
                                 </div>
                             </div>
                         @else
@@ -125,15 +125,15 @@
                             x-cloak>
                             <h3>{{ $process['kerntaak'] }}{{ $process['work_label'] }} — {{ $process['name'] }} <span class="process-count">{{ $items->count() }} bewijsstukken</span></h3>
                             @forelse ($items as $item)
-                            <form method="POST" action="{{ route('evidence.update', $item) }}" class="plan-row" enctype="multipart/form-data" x-data="{ evidenceStatus: @js($item->status) }">@csrf @method('PATCH')
+                            <form method="POST" action="{{ route('evidence.update', $item) }}" class="plan-row" enctype="multipart/form-data" x-data="{ evidenceStatus: @js($item->status === 'nakijken' ? 'ingeleverd' : $item->status) }">@csrf @method('PATCH')
                                 <div class="plan-number">{{ $item->item_number }}</div>
                                 <div class="plan-main"><label class="evidence-name">Naam van bewijsstuk<input name="title" value="{{ $item->title }}" placeholder="Schrijf de naam van je bewijsstuk..." @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')></label></div>
                                 <div class="plan-fields">
                                     <label><span class="info-label">Status bewijsstuk</span><select name="status" x-model="evidenceStatus" required @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')>
-                                            @if(in_array($item->status, ['akkoord', 'niet akkoord', 'nakijken'], true))<option value="{{ $item->status }}" selected>{{ ucfirst($item->status) }}</option>@endif
+                                            @if(in_array($item->status, ['akkoord', 'niet akkoord'], true))<option value="{{ $item->status }}" selected>{{ ucfirst($item->status) }}</option>@endif
                                             <option value="idee" @selected($item->status === 'idee')>Idee</option>
                                             <option value="bezig" @selected($item->status === 'bezig')>Bezig</option>
-                                            <option value="ingeleverd" @selected($item->status === 'ingeleverd')>Ingeleverd</option>
+                                            <option value="ingeleverd" @selected(in_array($item->status, ['ingeleverd', 'nakijken'], true))>Ingeleverd</option>
                                         </select></label>
                                     <p class="evidence-idea-visibility" x-cloak x-show="evidenceStatus === 'idee'">Je docent kan dit bewijsstuk en je notitie niet zien zolang de status op Idee staat. Kies ‘Ingeleverd’ wanneer je het wilt delen.</p>
                                 </div>

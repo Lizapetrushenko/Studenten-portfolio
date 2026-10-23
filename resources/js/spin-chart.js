@@ -17,9 +17,8 @@ document.addEventListener('DOMContentLoaded', function () {
         'bezig': '#fbbf24',
         'niet akkoord': '#dc2626',
         'idee': '#d87bd8',
-        nakijken: '#4b7fc1'
     };
-    const statuses = ['akkoord', 'ingeleverd', 'bezig', 'niet akkoord', 'idee', 'nakijken'];
+    const statuses = ['akkoord', 'ingeleverd', 'bezig', 'niet akkoord', 'idee'];
     const datasets = statuses.map(status => ({
         label: status.charAt(0).toUpperCase() + status.slice(1),
         data: processCodes.map(code => chartData[code][status] || 0),

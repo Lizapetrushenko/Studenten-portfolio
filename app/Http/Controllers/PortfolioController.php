@@ -50,11 +50,10 @@ class PortfolioController extends Controller
 
             $counts = [
                 'akkoord' => $processEvidence->where('status', 'akkoord')->count(),
-                'ingeleverd' => $processEvidence->where('status', 'ingeleverd')->count(),
+                'ingeleverd' => $processEvidence->whereIn('status', ['ingeleverd', 'nakijken'])->count(),
                 'bezig' => $processEvidence->where('status', 'bezig')->count(),
                 'niet akkoord' => $processEvidence->where('status', 'niet akkoord')->count(),
                 'idee' => $processEvidence->where('status', 'idee')->count(),
-                'nakijken' => $processEvidence->where('status', 'nakijken')->count(),
             ];
 
             $chartData[$code] = $counts;
@@ -72,10 +71,9 @@ class PortfolioController extends Controller
         return [
             'akkoord' => $portfolio->evidence->where('status', 'akkoord')->count(),
             'niet akkoord' => $portfolio->evidence->where('status', 'niet akkoord')->count(),
-            'ingeleverd' => $portfolio->evidence->where('status', 'ingeleverd')->count(),
+            'ingeleverd' => $portfolio->evidence->whereIn('status', ['ingeleverd', 'nakijken'])->count(),
             'bezig' => $portfolio->evidence->where('status', 'bezig')->count(),
             'idee' => $portfolio->evidence->where('status', 'idee')->count(),
-            'nakijken' => $portfolio->evidence->where('status', 'nakijken')->count(),
         ];
     }
 
@@ -142,7 +140,7 @@ class PortfolioController extends Controller
             'title' => ['nullable', 'string', 'max:120'],
             'note' => ['nullable', 'string', 'max:2000'],
             'submitted_where' => ['nullable', 'string', 'max:255'],
-            'status' => ['required', \Illuminate\Validation\Rule::in(array_merge(['idee', 'bezig', 'ingeleverd'], in_array($evidence->status, ['nakijken', 'niet akkoord'], true) ? [$evidence->status] : []))],
+            'status' => ['required', \Illuminate\Validation\Rule::in(array_merge(['idee', 'bezig', 'ingeleverd'], in_array($evidence->status, ['niet akkoord'], true) ? [$evidence->status] : []))],
             'is_completed' => ['nullable', 'boolean'],
             'file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,doc,docx', 'max:5120'],
         ]);
@@ -156,6 +154,10 @@ class PortfolioController extends Controller
             $validated['original_file_name'] = mb_substr($file->getClientOriginalName(), 0, 255);
         }
         unset($validated['file']);
+        // Saving a student note must not reset the teacher's review status.
+        if ($evidence->status === 'nakijken' && $validated['status'] === 'ingeleverd') {
+            $validated['status'] = 'nakijken';
+        }
         $evidence->update($validated);
 
         return back()->with('status', 'Bewijsplan opgeslagen.');
