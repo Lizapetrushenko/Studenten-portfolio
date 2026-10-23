@@ -48,8 +48,9 @@ class AdminController extends Controller
     {
         abort_unless($student->isStudent(), 404);
         $student->load(['groups', 'reviewers']);
+        $groups = Group::orderBy('name')->get();
 
-        return view('admin.student', compact('student'));
+        return view('admin.student', compact('student', 'groups'));
     }
 
     public function createGroup(Request $request): RedirectResponse
@@ -101,13 +102,10 @@ class AdminController extends Controller
         $ids = $data['group_ids'] ?? [];
         $statusIds = Group::whereNotNull('lifecycle_status')->whereIn('id', $ids)->pluck('id')->all();
         abort_if(count($statusIds) > 1, 422, 'Een student kan maar één statusgroep tegelijk hebben.');
-        if (!$statusIds) {
-            $statusIds = $student->groups()->whereNotNull('lifecycle_status')->pluck('groups.id')->all();
-            if (!$statusIds) $statusIds = [Group::where('lifecycle_status', 'nieuw')->value('id')];
-        }
-        $ids = array_values(array_unique([...$ids, ...$statusIds]));
         $student->groups()->sync($ids);
-        $student->update(['group_id' => $ids[0] ?? null]);
+        $primaryGroupId = $statusIds[0]
+            ?? Group::whereIn('id', $ids)->whereNull('lifecycle_status')->value('id');
+        $student->update(['group_id' => $primaryGroupId]);
         return back()->with('status', 'Groepslidmaatschappen opgeslagen.');
     }
 

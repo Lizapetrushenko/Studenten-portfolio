@@ -1,8 +1,8 @@
 <section>
     <header>
-        <h2 class="text-lg font-medium text-gray-900">
-            {{ $user->isStudent() ? 'Persoonlijke gegevens' : 'Profielgegevens' }}
-        </h2>
+        @unless($user->isStudent())
+            <h2 class="text-lg font-medium text-gray-900">Profielgegevens</h2>
+        @endunless
 
         <p class="mt-1 text-sm text-gray-600">
             Werk je profielgegevens en e-mailadres bij.

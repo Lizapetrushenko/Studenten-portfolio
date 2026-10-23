@@ -10,7 +10,35 @@
                 <label>Roepnaam<input value="{{ $student->preferred_name ?: 'Niet ingevuld' }}" disabled></label>
                 <label>Studentnummer<input value="{{ $student->student_number ?: 'Niet ingevuld' }}" disabled></label>
                 <label>Opleidingstype<input value="{{ $student->study_type === 'Flex' ? 'FLEX' : ($student->study_type ?: 'Niet ingevuld') }}" disabled></label>
-                <label>Groepen<input value="{{ $student->groups->pluck('name')->join(', ') ?: 'Nog geen groep' }}" disabled></label>
+                <form class="student-group-select" method="POST" action="{{ route('admin.students.group', $student) }}" x-data="{ open: false, selected: @js($student->groups->pluck('id')->map(fn ($id) => (string) $id)->values()) }" @click.outside="open = false" @keydown.escape="open = false">
+                    @csrf @method('PATCH')
+                    <span class="student-group-label">Groepen</span>
+                    <div class="group-multiselect">
+                        <div class="group-multiselect-value" role="group" aria-label="Geselecteerde groepen">
+                            <div class="group-multiselect-chips">
+                                @foreach($groups as $group)
+                                    <span class="group-multiselect-chip" x-cloak x-show="selected.includes('{{ $group->id }}')">
+                                        {{ $group->name }}
+                                        <button type="button" aria-label="{{ $group->name }} verwijderen" @click="selected = selected.filter(id => id !== '{{ $group->id }}')">×</button>
+                                    </span>
+                                @endforeach
+                                <span class="group-multiselect-placeholder" x-cloak x-show="selected.length === 0">Kies groepen</span>
+                            </div>
+                            <button type="button" class="group-multiselect-toggle" aria-label="Groepen selecteren" :aria-expanded="open.toString()" @click="open = !open">
+                                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :style="{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }"><path d="m6 9 6 6 6-6" /></svg>
+                            </button>
+                        </div>
+                        <div class="group-multiselect-menu" x-cloak x-show="open" x-transition.opacity>
+                            @foreach($groups as $group)
+                                <label class="group-multiselect-option" :class="selected.includes('{{ $group->id }}') ? 'is-selected' : ''">
+                                    <input type="checkbox" name="group_ids[]" value="{{ $group->id }}" x-model="selected" @checked($student->groups->contains('id', $group->id))>
+                                    <span>{{ $group->name }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                    <button class="button tiny-button" type="submit">Groepen opslaan</button>
+                </form>
                 <label>Beoordelaars<input value="{{ $student->reviewers->pluck('name')->join(', ') ?: 'Nog niet gekoppeld' }}" disabled></label>
             </div>
             <div class="mt-6 flex flex-wrap justify-end gap-3">

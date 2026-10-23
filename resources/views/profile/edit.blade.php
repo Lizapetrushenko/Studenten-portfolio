@@ -8,7 +8,6 @@
                         @include('profile.partials.update-profile-information-form')
                     </div>
                     <div class="student-profile-data-section">
-                        <h3>Schoolgegevens</h3>
                         <dl class="student-school-data">
                             @foreach($user->reviewers as $index => $reviewer)
                                 <div><dt>Beoordelaar {{ $index + 1 }}:</dt><dd>{{ $reviewer->name }}</dd></div>
