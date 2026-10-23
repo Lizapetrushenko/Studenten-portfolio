@@ -102,6 +102,29 @@ class GroupProgressTest extends TestCase
         $this->patch($url, ['status' => 'ingeleverd'])->assertSessionHasNoErrors()->assertRedirect();
         $this->assertSame('ingeleverd', $rejected->fresh()->status);
     }
+    public function test_teacher_can_review_in_progress_evidence_and_save_both_outcomes(): void
+    {
+        $teacher = User::factory()->create(['role' => 'teacher']);
+        $group = $teacher->teachingGroups()->create(['name' => 'SD2B']);
+        $group->workProcesses()->create(['number' => 1, 'name' => 'Plannen']);
+        $student = User::factory()->create(['role' => 'student']);
+        $group->students()->attach($student);
+        $portfolio = $student->portfolios()->create(['title' => 'Portfolio', 'study' => 'BBL']);
+        $item = $portfolio->evidence()->create(['title' => 'Werk in uitvoering', 'status' => 'bezig', 'work_process' => '1', 'category' => 'Project', 'item_number' => 1]);
+        $url = route('teacher.evidence.review', $item);
+        foreach (['nakijken', 'niet akkoord', 'nakijken', 'akkoord'] as $status) {
+            $this->actingAs($teacher)->from(route('teacher.students.portfolio', $student))
+                ->patch($url, ['status' => $status, 'feedback' => 'Feedback van docent'])
+                ->assertRedirect(route('teacher.students.portfolio', $student))->assertSessionHasNoErrors();
+            $this->assertSame($status, $item->fresh()->status);
+        }
+        $this->actingAs($student)->get('/dashboard')->assertOk()
+            ->assertSee('<option value="akkoord" selected>Akkoord</option>', false)
+            ->assertViewHas('spinChartData', fn ($json) => json_decode($json, true)[1]['akkoord'] === 1);
+        $idea = $portfolio->evidence()->create(['title' => 'Prive idee', 'status' => 'idee', 'work_process' => '1', 'category' => 'Project', 'item_number' => 2]);
+        $this->actingAs($teacher)->patch(route('teacher.evidence.review', $idea), ['status' => 'nakijken'])->assertNotFound();
+        $this->assertSame('idee', $idea->fresh()->status);
+    }
     public function test_progress_is_protected_by_login_role_and_group_ownership(): void
     {
         $owner = User::factory()->create(['role' => 'teacher']);

@@ -170,7 +170,6 @@ class TeacherController extends Controller
             'status' => ['required', 'in:akkoord,niet akkoord,nakijken'],
             'feedback' => ['nullable', 'string', 'max:2000'],
         ]);
-        abort_if($data['status'] === 'nakijken' && !in_array($evidence->status, ['ingeleverd', 'niet akkoord', 'nakijken'], true), 422, 'Alleen ingeleverde of afgekeurde bewijsstukken kunnen worden nagekeken.');
         if (array_key_exists('feedback', $data) && $data['feedback'] !== $evidence->feedback) {
             $data['feedback_author_name'] = filled($data['feedback']) ? $request->user()->displayName() : null;
         }
