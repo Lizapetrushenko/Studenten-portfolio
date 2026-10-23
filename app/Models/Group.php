@@ -6,10 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Validation\ValidationException;
 
 class Group extends Model
 {
-    protected $fillable = ['name', 'teacher_id'];
+    protected $fillable = ['name', 'teacher_id', 'photo_path'];
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Group $group) {
+            if ($group->lifecycle_status !== null) {
+                throw ValidationException::withMessages(['group' => 'Vaste statusgroepen kunnen niet worden verwijderd.']);
+            }
+        });
+    }
 
     public function teacher(): BelongsTo { return $this->belongsTo(User::class, 'teacher_id'); }
     public function students(): BelongsToMany { return $this->belongsToMany(User::class)->withTimestamps(); }

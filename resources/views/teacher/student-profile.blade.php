@@ -1,7 +1,6 @@
 <x-app-layout headerTitle="Studentgegevens · {{ $student->displayName() }}">
     <div class="portal-shell space-y-6">
         <a href="{{ route('teacher.students.index') }}" class="underline">← Terug naar studentenoverzicht</a>
-        @if (session('status'))<div class="panel" role="status">{{ session('status') }}</div>@endif
         @if ($errors->any())<div class="panel text-red-700">{{ $errors->first() }}</div>@endif
 
         <section class="panel">
@@ -27,7 +26,7 @@
             </form>
         </section>
         @if($student->hasLifecycleGroup('weg'))
-            <section class="panel"><p>Deze student staat in de groep WEG.</p><form method="POST" action="{{ route('teacher.students.destroy', $student) }}" onsubmit="return confirm('Deze student en het portfolio definitief verwijderen?')">@csrf @method('DELETE')<button class="delete-idea" type="submit">Student verwijderen</button></form></section>
+            <section class="panel"><p>Deze student staat in de groep WEG.</p><form method="POST" action="{{ route('teacher.students.destroy', $student) }}" data-confirm="Weet u zeker dat u deze student en het portfolio definitief wilt verwijderen?">@csrf @method('DELETE')<button class="delete-idea" type="submit">Student verwijderen</button></form></section>
         @endif
     </div>
 </x-app-layout>

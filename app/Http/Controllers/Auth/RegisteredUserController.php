@@ -52,6 +52,7 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'leerweg' => $request->leerweg,
+            'study_type' => $request->leerweg === 'FLEX' ? 'Flex' : $request->leerweg,
         ]);
 
         event(new Registered($user));
