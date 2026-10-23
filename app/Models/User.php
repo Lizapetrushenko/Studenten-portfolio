@@ -17,6 +17,10 @@ class User extends Authenticatable
 
     protected static function booted(): void
     {
+        static::saving(function (User $user) {
+            $user->education = ($user->role ?? 'student') === 'student' ? 'Software Developer' : null;
+        });
+
         static::creating(function (User $user) {
             $user->role ??= 'student';
             if ($user->isStudent()) {
@@ -29,7 +33,12 @@ class User extends Authenticatable
         static::created(function (User $user) {
             if ($user->isStudent()) {
                 $newGroup = Group::where('lifecycle_status', 'nieuw')->first();
-                if ($newGroup) $user->groups()->syncWithoutDetaching([$newGroup->id]);
+                if ($newGroup) {
+                    $user->groups()->syncWithoutDetaching([$newGroup->id]);
+                    if ($user->group_id !== $newGroup->id) {
+                        $user->forceFill(['group_id' => $newGroup->id])->saveQuietly();
+                    }
+                }
             }
         });
     }
@@ -76,6 +85,10 @@ class User extends Authenticatable
 
     public function displayName(): string
     {
+        if (! $this->isStudent()) {
+            return trim($this->name);
+        }
+
         $first = $this->preferred_name ?: ($this->first_name ?: $this->name);
         return trim($first.' '.($this->last_name ?? ''));
     }

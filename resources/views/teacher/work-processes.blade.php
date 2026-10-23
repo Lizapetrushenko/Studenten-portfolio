@@ -1,6 +1,6 @@
 <x-app-layout headerTitle="Werkprocessen beheren">
     <div class="portal-shell space-y-6">
-        <a href="{{ route('teacher.dashboard') }}" class="underline">← Terug naar dashboard</a>
+        <a href="{{ route('teacher.dashboard') }}" class="teacher-link back-button">← Terug naar dashboard</a>
         @if (session('status'))<div class="panel" role="status">{{ session('status') }}</div>@endif
         @if ($errors->any())<div class="panel text-red-700">{{ $errors->first() }}</div>@endif
         <section class="panel">
@@ -18,7 +18,7 @@
                                     <input id="process-{{ $group->id }}-{{ $process->id }}" name="name" value="{{ $process->name }}" maxlength="120" required>
                                     <button class="button" type="submit">Opslaan</button>
                                 </form>
-                                <form method="POST" action="{{ route('teacher.groups.work-processes.destroy', [$group, $process]) }}" onsubmit="return confirm('Werkproces verwijderen?')">@csrf @method('DELETE')<button class="button button-secondary" type="submit">Verwijderen</button></form>
+                                <form method="POST" action="{{ route('teacher.groups.work-processes.destroy', [$group, $process]) }}" data-confirm="Weet u zeker dat u dit werkproces wilt verwijderen?">@csrf @method('DELETE')<button class="button button-secondary" type="submit">Verwijderen</button></form>
                             </div>
                         @empty<p>Er zijn nog geen werkprocessen voor deze groep.</p>@endforelse
                     </div>

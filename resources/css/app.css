@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 [x-cloak] {
-    display: none,!important;
+    display: none !important;
 }
 
 
@@ -353,7 +353,7 @@ h3 {
 
 .panel {
     background: var(--card);
-    border: 1px solid var(--line);
+    border: 1px solid var(--accent);
     padding: 1.7rem;
 }
 
@@ -370,10 +370,45 @@ h3 {
 }
 
 .section-title {
-    display: flex;
-    justify-content: space-between;
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: start;
     margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.section-title > :first-child {
+    grid-column: 2;
+    justify-self: center;
+}
+
+.section-title > :last-child:not(:first-child) {
+    grid-column: 3;
+    justify-self: end;
+}
+
+@media (max-width: 640px) {
+    .section-title {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: .5rem;
+    }
+
+    .section-title > :first-child,
+    .section-title > :last-child:not(:first-child) {
+        grid-column: 1;
+        justify-self: center;
+    }
+}
+
+.portfolio-page .section-title {
+    text-align: left;
+}
+
+.portfolio-page .section-title > :first-child {
+    grid-column: 1;
+    justify-self: start;
 }
 
 .tag,
@@ -505,10 +540,13 @@ select:focus {
 }
 
 .kerntaak-tabs {
+    position: relative;
+    z-index: 2;
     display: flex;
     flex-direction: column;
     gap: .35rem;
     padding-top: 2.95rem;
+    transform: translateX(calc(-100% - .5rem));
 }
 
 .kerntaak-tab {
@@ -555,6 +593,9 @@ select:focus {
 
 .process-panel {
     border: 1px solid var(--accent);
+    width: calc(100% + 3.85rem);
+    margin-left: -3.85rem;
+    padding: 1.7rem 1.7rem 1.7rem calc(1.7rem + 3.85rem);
 }
 
 .process-panel > .section-title {
@@ -698,6 +739,74 @@ select:focus {
     text-decoration: underline;
 }
 
+.saved-file-list {
+    width: 100%;
+    margin-top: .5rem;
+    font-size: .8rem;
+}
+
+.saved-file-header,
+.saved-file-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 6rem auto;
+    align-items: center;
+    gap: .8rem;
+}
+
+.saved-file-header {
+    padding: .35rem .6rem;
+    border-bottom: 1px solid #9aa3ad;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.saved-file-row {
+    min-width: 0;
+    padding: .6rem;
+    border-bottom: 1px solid #9aa3ad;
+    background: #f1f3f5;
+}
+
+.saved-file-name {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: .6rem;
+}
+
+.saved-file-name svg,
+.saved-file-download svg {
+    width: 1.3rem;
+    height: 1.3rem;
+    flex: 0 0 auto;
+}
+
+.saved-file-name > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.saved-file-size {
+    white-space: nowrap;
+}
+
+.saved-file-download {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .35rem .6rem;
+    border: 1px solid #d1d5db;
+    border-radius: 5px;
+    color: #344054;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.saved-file-download:hover {
+    background: #fff;
+}
+
 .file-actions {
     display: flex;
     flex-wrap: wrap;
@@ -751,6 +860,50 @@ select:focus {
     padding: .55rem;
     font-size: .78rem;
     font-weight: 700;
+}
+
+.teacher-status-line {
+    margin: .6rem 0 .35rem;
+    color: var(--ink);
+    font-size: .9rem;
+}
+
+.teacher-feedback-bubble {
+    position: relative;
+    width: fit-content;
+    max-width: min(32rem, 100%);
+    margin: .4rem 0 1.1rem .75rem;
+    padding: .95rem 1.15rem;
+    border-radius: 1.6rem;
+    background: #302d73;
+    color: #fff;
+    font-size: .88rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+.teacher-feedback-bubble::after {
+    position: absolute;
+    bottom: -10px;
+    left: 1rem;
+    width: 0;
+    height: 0;
+    border-top: 16px solid #302d73;
+    border-right: 14px solid transparent;
+    content: "";
+    transform: rotate(10deg);
+}
+
+.evidence-idea-visibility {
+    grid-column: 1 / -1;
+    margin: .25rem 0;
+    padding: .6rem .75rem;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: #f4f1eb;
+    color: var(--muted);
+    font-size: .78rem;
+    line-height: 1.45;
 }
 
 .status-akkoord {
@@ -1050,6 +1203,23 @@ select:focus {
     gap: 1rem;
 }
 
+.admin-dashboard-panel {
+    display: flex;
+    min-height: 40rem;
+    flex-direction: column;
+}
+
+.admin-dashboard-panel > .section-title {
+    justify-content: center;
+    text-align: center;
+}
+
+.admin-dashboard-panel .screen-grid {
+    width: 100%;
+    max-width: 70rem;
+    margin: auto;
+}
+
 .screen-card {
     position: relative;
     min-height: 220px;
@@ -1058,6 +1228,404 @@ select:focus {
     background: var(--card);
     color: var(--ink);
     transition: transform .2s, border-color .2s;
+}
+
+.group-photo-placeholder {
+    width: 9rem;
+    height: 9rem;
+    border-radius: 9999px;
+    background: #e5e7eb;
+}
+
+.profile-form-center header {
+    text-align: center;
+}
+
+.profile-form-center form > div {
+    margin-inline: auto;
+}
+
+.profile-form-center form > div:has(> label) {
+    text-align: left;
+}
+
+.profile-form-center form > div > label {
+    text-align: left !important;
+}
+
+.profile-form-center form > div.flex,
+.profile-form-center > .space-y-6 > header + button {
+    justify-content: center;
+}
+
+.student-profile-page {
+    width: min(calc(100% - 2rem), 86rem);
+    margin-inline: auto;
+}
+
+.student-profile-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 1.25rem;
+    max-width: 42rem;
+    margin-inline: auto;
+}
+
+.student-profile-card {
+    min-width: 0;
+    min-height: 100%;
+    padding: 1.5rem;
+    background: #fff;
+}
+
+.student-profile-card > header {
+    margin-bottom: 1.25rem;
+    text-align: center;
+}
+
+.student-profile-card > header h2 {
+    margin: 0;
+    color: var(--ink);
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.student-profile-columns .student-profile-card .space-y-6 > button {
+    display: flex;
+    margin-inline: auto;
+}
+
+.student-profile-data-section + .student-profile-data-section {
+    margin-top: 1.75rem;
+    border-top: 1px solid var(--line);
+    padding-top: 1.5rem;
+}
+
+.student-profile-data-section > h3 {
+    margin: 0 0 1rem;
+    color: var(--ink);
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.student-school-data {
+    display: grid;
+    gap: .85rem;
+    color: var(--ink);
+}
+
+.student-school-data > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem;
+}
+
+.student-school-data dt {
+    font-weight: 700;
+}
+
+.student-school-data dd {
+    margin: 0;
+}
+
+.student-profile-delete {
+    margin-top: 2rem;
+    border-top: 1px solid var(--line);
+    padding-top: 1.25rem;
+}
+
+.student-list-filters {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.6fr) minmax(160px, .8fr) minmax(190px, 1fr);
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.student-list-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--ink);
+}
+
+.student-list-table th,
+.student-list-table td {
+    border: 2px solid #20202b;
+    padding: .9rem 1rem;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.student-list-table th {
+    background: #302d69;
+    color: #fff;
+    font-weight: 700;
+}
+
+.student-list-table td small {
+    display: block;
+    margin-top: .25rem;
+    color: var(--muted);
+    font-size: .78rem;
+}
+
+.student-detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 30rem);
+    gap: .6rem;
+    justify-content: center;
+    margin-inline: auto;
+}
+
+.student-details-panel {
+    max-width: 52rem;
+    margin-inline: auto;
+    padding: 1.25rem;
+}
+
+.student-detail-grid label {
+    gap: .25rem;
+    font-size: .75rem;
+}
+
+.student-detail-grid input {
+    padding: .5rem .7rem;
+    font-size: .84rem;
+}
+
+.student-group-select {
+    display: grid;
+    gap: .35rem;
+}
+
+.student-group-label {
+    color: var(--muted);
+    font-size: .75rem;
+}
+
+.group-multiselect {
+    position: relative;
+}
+
+.group-multiselect-value {
+    display: flex;
+    min-height: 2.75rem;
+    align-items: center;
+    gap: .5rem;
+    padding: .35rem .5rem;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: #fff;
+}
+
+.group-multiselect-chips {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    gap: .35rem;
+}
+
+.group-multiselect-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .2rem .5rem;
+    border-radius: 999px;
+    background: #e8e9eb;
+    color: var(--ink);
+    font-size: .78rem;
+}
+
+.group-multiselect-chip button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #5e6265;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.group-multiselect-placeholder {
+    color: #687078;
+    font-size: .84rem;
+}
+
+.group-multiselect-toggle {
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    flex: 0 0 2rem;
+    place-items: center;
+    border: 0;
+    background: transparent;
+    color: #687078;
+    cursor: pointer;
+}
+
+.group-multiselect-toggle svg {
+    transition: transform .15s ease;
+}
+
+.group-multiselect-menu {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + .25rem);
+    right: 0;
+    left: 0;
+    max-height: 14rem;
+    overflow-y: auto;
+    padding: .25rem;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: #fff;
+    box-shadow: 0 8px 20px rgb(15 23 42 / 16%);
+}
+
+.group-multiselect-option {
+    display: flex;
+    min-height: 2.5rem;
+    align-items: center;
+    gap: .65rem;
+    padding: .5rem .65rem;
+    color: var(--ink);
+    cursor: pointer;
+    font-size: .84rem;
+}
+
+.group-multiselect-option.is-selected,
+.group-multiselect-option:hover {
+    background: #eef0f2;
+}
+
+.group-multiselect-option input {
+    width: 1rem;
+    height: 1rem;
+    flex: 0 0 1rem;
+    margin: 0;
+    accent-color: var(--ink);
+}
+
+.student-group-select button {
+    justify-self: start;
+}
+
+@media (max-width: 700px) {
+    .student-detail-grid {
+        grid-template-columns: 1fr;
+        width: 100%;
+    }
+}
+
+.success-toast {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 1000;
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    width: min(25rem, calc(100vw - 2rem));
+    padding: .85rem 1rem;
+    border: 1px solid #bbf7d0;
+    border-left: 4px solid #16a34a;
+    border-radius: .65rem;
+    background: #fff;
+    color: #14532d;
+    box-shadow: 0 12px 35px rgb(15 23 42 / 18%);
+}
+
+.success-toast-icon {
+    display: grid;
+    width: 1.6rem;
+    height: 1.6rem;
+    flex: 0 0 1.6rem;
+    place-items: center;
+    border-radius: 50%;
+    background: #dcfce7;
+    color: #15803d;
+    font-weight: 800;
+}
+
+.success-toast-message {
+    display: grid;
+    flex: 1;
+    gap: .15rem;
+    font-size: .85rem;
+}
+
+.success-toast-message span {
+    color: #166534;
+}
+
+.success-toast-close {
+    padding: 0 .2rem;
+    border: 0;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.email-confirmation-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    background: rgb(15 23 42 / 55%);
+}
+
+.email-confirmation-dialog {
+    width: min(100%, 28rem);
+    padding: 1.5rem;
+    border: 1px solid var(--line);
+    border-radius: .65rem;
+    background: #fff;
+    color: var(--ink);
+    box-shadow: 0 20px 50px rgb(15 23 42 / 25%);
+}
+
+.email-confirmation-dialog h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.email-confirmation-dialog p {
+    margin: .75rem 0 1.25rem;
+    color: var(--muted);
+}
+
+.email-confirmation-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: .75rem;
+}
+
+.email-confirmation-actions .secondary-button {
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #334155;
+}
+
+.email-confirmation-actions .secondary-button:hover {
+    background: #f1f5f9;
+}
+
+@media (max-width: 480px) {
+    .email-confirmation-actions {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 700px) {
+    .student-list-filters {
+        grid-template-columns: 1fr;
+    }
 }
 
 .screen-card:hover {
@@ -1103,7 +1671,7 @@ select:focus {
 .portfolio-panel,
 .spin-chart-panel {
     margin-bottom: 0;
-    border: 2px solid #f5b47b;
+    border: 1px solid var(--accent);
 }
 
 .portfolio-panel-empty {
@@ -1407,9 +1975,16 @@ select:focus {
         grid-template-columns: minmax(0, 1fr);
     }
 
+    .process-panel {
+        width: 100%;
+        margin-left: 0;
+        padding: 1.25rem;
+    }
+
     .kerntaak-tabs {
         flex-direction: row;
         padding-top: 0;
+        transform: none;
     }
 
     .kerntaak-tab {
@@ -1431,8 +2006,521 @@ select:focus {
     }
 }
 
+@media (max-width: 560px) {
+    .saved-file-header {
+        display: none;
+    }
+
+    .saved-file-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: .4rem;
+    }
+
+    .saved-file-download {
+        grid-column: 1 / -1;
+        justify-self: end;
+    }
+}
+
 @media (max-width: 520px) {
     .status-summary {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* Consistent corners for interface controls and surfaces. */
+:is(.panel, .auth-card, .screen-card, .process-add-form, .process-panel,
+    .evidence-item, .notice, .flash-message, .empty-state, .mfa-secret,
+    .tag, .count, .button, .deltion-button, .auth-submit, .oauth-button,
+    .process-tab, .kerntaak-tab, .tiny-button, .small-button,
+    button:not(.rounded-full), input:not([type="radio"]), select, textarea,
+    [class~="rounded"], [class~="rounded-md"], [class~="rounded-lg"],
+    [class~="rounded-xl"], [class~="rounded-2xl"], [class~="rounded-3xl"],
+    details > summary, details > div) {
+    border-radius: 5px !important;
+}
+/* Teacher navigation and table links share one understated style. */
+.teacher-page-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .75rem;
+}
+
+.teacher-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: color .15s ease;
+}
+
+.teacher-link:hover {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.teacher-link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+}
+
+.teacher-page-nav > .teacher-link, .back-button {
+    padding: .65rem .85rem;
+    border: 1px solid var(--line);
+    background: var(--card);
+}
+.teacher-add-student {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+    gap: 1rem;
+}
+
+.teacher-add-student > .full {
+    grid-column: 1 / -1;
+}
+
+.teacher-add-student > button {
+    align-self: end;
+    justify-self: start;
+}
+
+.student-select-wrap {
+    display: block;
+    position: relative;
+    min-width: 0;
+}
+
+.student-select-wrap select {
+    appearance: none;
+    background-image: none;
+    padding-right: 2.75rem;
+}
+
+.student-select-arrow {
+    position: absolute;
+    right: .85rem;
+    top: 50%;
+    margin-top: -9px;
+    pointer-events: none;
+    color: var(--ink);
+    transition: transform .2s ease;
+}
+
+.student-select-wrap select:open + .student-select-arrow {
+    transform: rotate(180deg);
+}
+
+@media (max-width: 640px) {
+    .teacher-add-student {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .student-select-arrow {
+        transition: none;
+    }
+}
+.work-process-edit-row {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 1rem;
+}
+
+.work-process-edit-row > .eyebrow {
+    align-self: end;
+    margin: 0 0 .8rem;
+}
+
+.work-process-edit-row .work-process-save {
+    width: auto;
+    justify-self: start;
+    padding: .55rem .9rem;
+    font-size: .85rem;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+    .work-process-edit-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: .5rem;
+    }
+
+    .work-process-edit-row > .eyebrow {
+        grid-column: 1 / -1;
+        margin: 0;
+    }
+}
+.student-profile-page .form-grid {
+    align-items: start;
+}
+
+.student-profile-page fieldset {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.student-profile-page fieldset label {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    min-height: 2rem;
+    font-weight: 400;
+    color: var(--ink);
+}
+
+.student-profile-page input:is([type="radio"], [type="checkbox"]) {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    padding: 0;
+    margin: 0;
+    accent-color: var(--accent);
+}
+
+.student-profile-page input[type="radio"] {
+    border-radius: 50% !important;
+}
+
+.student-profile-page input[type="checkbox"] {
+    border-radius: 3px !important;
+}
+
+.student-profile-page select:not([multiple]) {
+    align-self: start;
+}
+
+.student-profile-page select[multiple] {
+    min-height: 8rem;
+    max-height: 10rem;
+}
+.reviewer-label {
+    display: block;
+    margin-bottom: .4rem;
+    color: var(--muted);
+    font-size: .8rem;
+    font-weight: 600;
+}
+
+.reviewer-picker details {
+    position: relative;
+}
+
+.reviewer-picker summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .75rem .85rem;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+    font-size: .9rem;
+    list-style: none;
+    cursor: pointer;
+}
+
+.reviewer-picker summary::-webkit-details-marker {
+    display: none;
+}
+
+.reviewer-picker summary svg {
+    flex-shrink: 0;
+    transition: transform .2s ease;
+}
+
+.reviewer-picker summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.reviewer-menu {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + .3rem);
+    inset-inline: 0;
+    padding: .65rem;
+    border: 1px solid var(--line);
+    background: #fff;
+}
+
+.reviewer-options {
+    max-height: 13rem;
+    overflow-y: auto;
+    margin-top: .4rem;
+}
+
+.student-profile-page .reviewer-options label {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .5rem;
+    color: var(--ink);
+    font-size: .85rem;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.reviewer-options label:hover {
+    background: var(--paper);
+}
+
+.reviewer-hint, .reviewer-options p {
+    margin-top: .4rem;
+    color: var(--muted);
+    font-size: .8rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reviewer-picker summary svg {
+        transition: none;
+    }
+}
+.progress-panel { border-color: var(--accent); }
+.progress-filters { display: flex; flex-wrap: wrap; align-items: end; gap: 1rem; margin: 1.5rem 0; }
+.progress-filters label { flex: 1 1 220px; }
+.progress-filters .teacher-link { align-self: center; }
+.progress-legend { display: flex; flex-wrap: wrap; gap: .6rem 1rem; margin-bottom: 1rem; color: var(--muted); font-size: .8rem; }
+.progress-legend > span { display: inline-flex; align-items: center; gap: .4rem; }
+.progress-key { display: inline-block; width: 12px; height: 12px; border: 1px solid; border-radius: 3px; }
+.progress-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 5px; }
+.progress-table { width: 100%; min-width: 640px; border-collapse: collapse; text-align: left; font-size: .85rem; }
+.progress-table th, .progress-table td { padding: .85rem; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.progress-table thead th { background: var(--paper); text-align: center; white-space: nowrap; }
+.progress-table th:first-child { min-width: 175px; text-align: left; }
+.progress-table tr > :last-child { border-right: 0; }
+.progress-table tbody tr:last-child > * { border-bottom: 0; }
+.progress-table tbody th { background: var(--card); }
+.progress-table abbr { text-decoration: none; cursor: help; }
+.progress-table small { display: block; margin-top: .35rem; color: var(--muted); font-weight: 400; }
+.progress-items { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: center; gap: .35rem; }
+.progress-evidence { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; min-width: 30px; min-height: 30px; flex: 0 0 auto; box-sizing: border-box; padding: 0; border: 1px solid; border-radius: 5px; font-weight: 600; text-decoration: none; }
+.progress-evidence:hover { outline: 1px solid currentColor; }
+.progress-evidence:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.progress-ingeleverd { background: #fff0df; color: #9a4300; border-color: #e8b67e; }
+.progress-in-proces { background: #fff8dc; color: #765700; border-color: #dbc46b; }
+.progress-akkoord { background: #e5f4e9; color: #24643c; border-color: #94c4a3; }
+.progress-niet-akkoord { background: #fff0ee; color: #a32b28; border-color: #e2a6a2; }
+.progress-niet-bekeken { background: #f1f3f5; color: #52616b; border-color: #bac3c9; }
+.progress-moet-aangepast-worden { background: #f3ebff; color: #714396; border-color: #c4a6db; }
+.progress-dash { color: var(--muted); }
+.progress-empty { padding: 1.5rem; color: var(--muted); text-align: center; }
+@media (max-width: 640px) { .progress-filters label { flex-basis: 100%; } }
+.progress-nakijken { background: #e8f0ff; color: #345a91; border-color: #9cb8df; }
+.progress-item { display: flex; flex-direction: column; align-items: center; gap: .3rem; }
+.progress-review-button { padding: .25rem .4rem; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-size: .7rem; cursor: pointer; }
+.progress-review-button:hover { border-color: var(--accent); color: var(--accent); }
+.progress-review-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.progress-review-label { font-size: .7rem; color: #345a91; }
+/* Keep the radar and its legend readable inside the existing panel. */
+.spin-chart-panel { min-width: 0; }
+.spin-chart-panel .spin-chart-widget-small { width: 100%; gap: 1rem; }
+.spin-chart-panel .spin-chart-container-small {
+    width: min(100%, 360px);
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+}
+.spin-chart-panel .spin-chart-container-small canvas { position: absolute; inset: 0; }
+.spin-chart-panel .section-title { margin-bottom: .75rem; }
+.spin-chart-panel .spin-legend-small { justify-content: center; gap: .6rem 1rem; }
+.spin-chart-panel .legend-item { gap: .4rem; font-size: .85rem; line-height: 1.5; }
+.spin-chart-panel .legend-dot { width: 10px; height: 10px; }
+.evidence-delete-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    padding: .5rem .75rem;
+    border: 1px solid #dba5a0;
+    border-radius: 5px;
+    background: #fff0ee;
+    color: #a32b28;
+    font: inherit;
+    font-size: .8rem;
+    font-weight: 600;
+    line-height: 1.5;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.evidence-delete-button:hover {
+    background: #fbe1dd;
+    border-color: #a32b28;
+}
+
+.evidence-delete-button:focus-visible {
+    outline: 2px solid #a32b28;
+    outline-offset: 3px;
+}
+.progress-niet-ingeleverd { background: #dfe3e6; color: #52616b; border-color: #a9b2b9; }
+
+.teacher-portfolio-page .review-evidence-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+}
+
+.review-evidence-heading h3 { margin: 0; }
+.review-status-label {
+    display: inline-flex;
+    align-items: center;
+    align-self: center;
+    flex: 0 0 auto;
+    padding: .25rem .6rem;
+    border: 1px solid;
+    border-radius: 5px;
+    font-size: .75rem;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.evidence-review-form {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) minmax(0, 2fr) auto;
+    align-items: end;
+    gap: 1rem;
+}
+
+.evidence-review-form label { min-width: 0; }
+.evidence-review-form select, .evidence-review-form textarea {
+    min-height: 46px;
+    height: 46px;
+    font-size: .85rem;
+}
+.evidence-review-form textarea { resize: vertical; }
+.evidence-review-form .review-save-button {
+    width: auto;
+    min-height: 46px;
+    padding: .65rem .85rem;
+    font-size: .8rem;
+    white-space: nowrap;
+    justify-self: start;
+}
+.teacher-portfolio-page article { scroll-margin-top: 1.5rem; }
+@media (max-width: 900px) {
+    .evidence-review-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .evidence-review-form .review-save-button { grid-column: 1 / -1; }
+}
+@media (max-width: 540px) {
+    .evidence-review-form { grid-template-columns: minmax(0, 1fr); }
+}
+/* Feedback and delete actions have their own space below each evidence form. */
+.teacher-feedback {
+    position: relative;
+    width: fit-content;
+    max-width: min(36rem, calc(100% - 51px));
+    margin: .5rem 0 1.5rem 51px;
+    padding: .9rem 1.25rem;
+    border: 0;
+    border-radius: 1.5rem;
+    background: #302d73;
+    color: #fff;
+    overflow-wrap: anywhere;
+}
+.teacher-feedback::after {
+    content: "";
+    position: absolute;
+    left: 1.25rem;
+    bottom: -10px;
+    width: 0;
+    height: 0;
+    border-top: 16px solid #302d73;
+    border-right: 16px solid transparent;
+    transform: rotate(10deg);
+}
+.teacher-feedback h4 { margin: 0 0 .4rem; color: #fff; font-size: .85rem; font-weight: 600; }
+.teacher-feedback p { margin: 0; color: #fff; font-size: .95rem; line-height: 1.5; white-space: pre-wrap; }
+.process-group > .file-actions { margin: .75rem 0 1.25rem 51px; align-items: center; }
+.process-group > .delete-idea-form { margin: .75rem 0 1.25rem 51px; }
+.evidence-review-form textarea { min-height: 120px; height: 120px; }
+@media (max-width: 720px) {
+    .teacher-feedback { width: fit-content; max-width: calc(100% - 46px); margin-left: 46px; padding: .85rem 1rem; border-radius: 1.25rem; }
+    .process-group > .file-actions, .process-group > .delete-idea-form { margin-left: 46px; }
+}
+
+/* Blue interactions balance the orange accents. */
+:root {
+    --interaction-blue: #2458a6;
+    --interaction-navy: #302d73;
+    --interaction-soft: #eef3fc;
+}
+
+:is(.button, .auth-submit, .deltion-button):not(:disabled):is(:hover, :focus-visible) {
+    background: var(--interaction-navy);
+    border-color: var(--interaction-navy);
+    color: #fff;
+}
+
+.teacher-link:is(:hover, :focus-visible),
+.saved-file-download:is(:hover, :focus-visible) {
+    color: var(--interaction-blue);
+}
+
+.back-button:is(:hover, :focus-visible),
+.button.secondary-button:is(:hover, :focus-visible) {
+    background: var(--interaction-soft);
+    border-color: var(--interaction-blue);
+    color: var(--interaction-navy);
+}
+
+.screen-card:is(:hover, :focus-visible) {
+    border-color: var(--interaction-blue);
+    background: var(--interaction-soft);
+}
+
+.screen-card:is(:hover, :focus-visible) strong {
+    color: var(--interaction-navy);
+}
+
+:is(.kerntaak-tab, .process-tab):hover {
+    background: var(--interaction-soft);
+    border-color: var(--interaction-blue);
+    color: var(--interaction-navy);
+}
+
+:is(.teacher-link, .back-button, .button, .auth-submit, .screen-card, .kerntaak-tab, .process-tab):focus-visible {
+    outline: 2px solid var(--interaction-blue);
+    outline-offset: 3px;
+}
+.auth-secondary-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: .65rem 1rem;
+    border: 1px solid #302d73;
+    border-radius: 5px;
+    background: #fff;
+    color: #302d73;
+    font-size: .85rem;
+    font-weight: 600;
+    line-height: 1.5;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color .15s ease, color .15s ease;
+}
+.auth-secondary-action:hover {
+    background: #302d73;
+    color: #fff;
+    text-decoration: none;
+}
+.auth-secondary-action:focus-visible {
+    outline: 2px solid #2458a6;
+    outline-offset: 3px;
+}
+@media (max-width: 400px) {
+    .auth-actions { flex-wrap: wrap; }
+}
+.register-link.auth-secondary-action { width: auto; max-width: 100%; }

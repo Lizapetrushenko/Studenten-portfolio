@@ -17,7 +17,8 @@ class DatabaseSeederTest extends TestCase
         $this->seed(DatabaseSeeder::class);
         $admin = User::where('email', 'admin@admin.com')->firstOrFail();
         $this->assertTrue($admin->is_admin);
-        $this->assertTrue(Hash::check('password', $admin->password));
+        $this->assertSame('admin', $admin->role);
+        $this->assertTrue(Hash::check('qwerty123', $admin->password));
         $this->assertNotNull($admin->email_verified_at);
         $this->assertFalse(User::where('email', 'test@example.com')->firstOrFail()->is_admin);
 
@@ -31,7 +32,8 @@ class DatabaseSeederTest extends TestCase
     public function test_registration_cannot_grant_admin_permissions(): void
     {
         $this->post('/register', [
-            'name' => 'Student',
+            'first_name' => 'Student',
+            'last_name' => 'Voorbeeld',
             'email' => 'student@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',

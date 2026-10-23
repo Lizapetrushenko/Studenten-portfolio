@@ -33,6 +33,26 @@ class AdminController extends Controller
         return back()->with('status', 'Docent toegevoegd.');
     }
 
+    public function showTeacher(User $teacher): View
+    {
+        abort_unless($teacher->isTeacher(), 404);
+        $teacher->load('teachingGroups');
+        $nameParts = preg_split('/\s+/', trim($teacher->name), 2);
+        $firstName = $teacher->first_name ?: ($nameParts[0] ?? '');
+        $lastName = $teacher->last_name ?: ($nameParts[1] ?? '');
+
+        return view('admin.teacher', compact('teacher', 'firstName', 'lastName'));
+    }
+
+    public function showStudent(User $student): View
+    {
+        abort_unless($student->isStudent(), 404);
+        $student->load(['groups', 'reviewers']);
+        $groups = Group::orderBy('name')->get();
+
+        return view('admin.student', compact('student', 'groups'));
+    }
+
     public function createGroup(Request $request): RedirectResponse
     {
         $data = $request->validate(['name' => ['required', 'string', 'max:120'], 'teacher_id' => ['nullable', 'exists:users,id']]);
@@ -44,6 +64,37 @@ class AdminController extends Controller
         return back()->with('status', 'Groep aangemaakt.');
     }
 
+    public function showGroup(Group $group): View
+    {
+        $group->load(['teacher', 'students' => fn ($query) => $query->orderBy('last_name')->orderBy('first_name')]);
+        $teachers = User::where('role', 'teacher')->orderBy('name')->get();
+        return view('admin.group', compact('group', 'teachers'));
+    }
+
+    public function updateGroup(Request $request, Group $group): RedirectResponse
+    {
+        abort_if($group->lifecycle_status !== null, 403, 'Vaste statusgroepen kunnen niet worden aangepast.');
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'teacher_id' => ['nullable', 'exists:users,id'],
+            'photo' => ['nullable', 'image', 'max:5120'],
+            'remove_photo' => ['nullable', 'boolean'],
+        ]);
+        if (!empty($data['teacher_id'])) abort_unless(User::whereKey($data['teacher_id'])->where('role', 'teacher')->exists(), 422);
+        if ($request->boolean('remove_photo') && $group->photo_path) {
+            Storage::disk('public')->delete($group->photo_path);
+            $group->photo_path = null;
+        }
+        if ($request->hasFile('photo')) {
+            if ($group->photo_path) Storage::disk('public')->delete($group->photo_path);
+            $group->photo_path = $request->file('photo')->store('groups', 'public');
+        }
+        $group->name = $data['name'];
+        $group->teacher_id = $data['teacher_id'] ?? null;
+        $group->save();
+        return back()->with('status', 'Groepsgegevens opgeslagen.');
+    }
+
     public function assignStudent(Request $request, User $student): RedirectResponse
     {
         abort_unless($student->role === 'student', 404);
@@ -51,13 +102,10 @@ class AdminController extends Controller
         $ids = $data['group_ids'] ?? [];
         $statusIds = Group::whereNotNull('lifecycle_status')->whereIn('id', $ids)->pluck('id')->all();
         abort_if(count($statusIds) > 1, 422, 'Een student kan maar één statusgroep tegelijk hebben.');
-        if (!$statusIds) {
-            $statusIds = $student->groups()->whereNotNull('lifecycle_status')->pluck('groups.id')->all();
-            if (!$statusIds) $statusIds = [Group::where('lifecycle_status', 'nieuw')->value('id')];
-        }
-        $ids = array_values(array_unique([...$ids, ...$statusIds]));
         $student->groups()->sync($ids);
-        $student->update(['group_id' => $ids[0] ?? null]);
+        $primaryGroupId = $statusIds[0]
+            ?? Group::whereIn('id', $ids)->whereNull('lifecycle_status')->value('id');
+        $student->update(['group_id' => $primaryGroupId]);
         return back()->with('status', 'Groepslidmaatschappen opgeslagen.');
     }
 
@@ -73,7 +121,8 @@ class AdminController extends Controller
                 }
             }
         }
+        $section = $user->isStudent() ? 'students' : 'teachers';
         $user->delete();
-        return back()->with('status', 'Account verwijderd.');
+        return redirect()->route('admin.dashboard', ['section' => $section])->with('status', 'Account verwijderd.');
     }
 }

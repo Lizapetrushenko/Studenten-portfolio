@@ -50,10 +50,10 @@ class PortfolioController extends Controller
 
             $counts = [
                 'akkoord' => $processEvidence->where('status', 'akkoord')->count(),
-                'ingeleverd' => $processEvidence->where('status', 'ingeleverd')->count(),
-                'in proces' => $processEvidence->where('status', 'in proces')->count(),
+                'ingeleverd' => $processEvidence->whereIn('status', ['ingeleverd', 'nakijken'])->count(),
+                'bezig' => $processEvidence->where('status', 'bezig')->count(),
                 'niet akkoord' => $processEvidence->where('status', 'niet akkoord')->count(),
-                'idee' => $processEvidence->filter(fn (Evidence $item) => $item->status === 'idee' || filled($item->idea))->count(),
+                'idee' => $processEvidence->where('status', 'idee')->count(),
             ];
 
             $chartData[$code] = $counts;
@@ -71,9 +71,9 @@ class PortfolioController extends Controller
         return [
             'akkoord' => $portfolio->evidence->where('status', 'akkoord')->count(),
             'niet akkoord' => $portfolio->evidence->where('status', 'niet akkoord')->count(),
-            'ingeleverd' => $portfolio->evidence->where('status', 'ingeleverd')->count(),
-            'in proces' => $portfolio->evidence->where('status', 'in proces')->count(),
-            'idee' => $portfolio->evidence->filter(fn (Evidence $item) => $item->status === 'idee' || filled($item->idea))->count(),
+            'ingeleverd' => $portfolio->evidence->whereIn('status', ['ingeleverd', 'nakijken'])->count(),
+            'bezig' => $portfolio->evidence->where('status', 'bezig')->count(),
+            'idee' => $portfolio->evidence->where('status', 'idee')->count(),
         ];
     }
 
@@ -110,16 +110,19 @@ class PortfolioController extends Controller
             'title' => ['required', 'string', 'max:120'],
             'work_process' => ['required', 'integer', 'min:1'],
             'category' => ['required', 'string', 'max:60'],
-            'status' => ['required', 'in:idee,in proces,ingeleverd'],
+            'status' => ['required', 'in:idee,bezig,ingeleverd'],
+            'note' => ['nullable', 'string', 'max:2000'],
             'description' => ['nullable', 'string', 'max:1000'],
             'submitted_where' => ['nullable', 'string', 'max:255'],
             'url' => ['nullable', 'url', 'max:500'],
-            'file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,doc,docx', 'max:5120'],
+            'file' => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
         ]);
         abort_unless($request->user()->groups()->whereNull('lifecycle_status')->whereHas('workProcesses', fn ($query) => $query->where('number', $validated['work_process']))->exists(), 422, 'Dit werkproces hoort niet bij jouw groep.');
 
         if ($request->hasFile('file')) {
-            $validated['file_path'] = $request->file('file')->store('evidence', 'local');
+            $file = $request->file('file');
+            $validated['file_path'] = $file->store('evidence', 'local');
+            $validated['original_file_name'] = mb_substr($file->getClientOriginalName(), 0, 255);
         }
         unset($validated['file']);
         $validated['item_number'] = $portfolio->evidence()->where('work_process', $validated['work_process'])->count() + 1;
@@ -135,10 +138,9 @@ class PortfolioController extends Controller
         abort_if($evidence->status === 'akkoord', 422, 'Een akkoord bewijsstuk kan niet meer worden gewijzigd.');
         $validated = $request->validate([
             'title' => ['nullable', 'string', 'max:120'],
-            'idea' => ['nullable', 'string', 'max:2000'],
             'note' => ['nullable', 'string', 'max:2000'],
             'submitted_where' => ['nullable', 'string', 'max:255'],
-            'status' => ['required', 'in:idee,in proces,ingeleverd'],
+            'status' => ['required', \Illuminate\Validation\Rule::in(array_merge(['idee', 'bezig', 'ingeleverd'], in_array($evidence->status, ['niet akkoord'], true) ? [$evidence->status] : []))],
             'is_completed' => ['nullable', 'boolean'],
             'file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,doc,docx', 'max:5120'],
         ]);
@@ -147,10 +149,15 @@ class PortfolioController extends Controller
                 Storage::disk('local')->delete($evidence->file_path);
                 Storage::disk('public')->delete($evidence->file_path);
             }
-            $validated['file_path'] = $request->file('file')->store('evidence', 'local');
+            $file = $request->file('file');
+            $validated['file_path'] = $file->store('evidence', 'local');
+            $validated['original_file_name'] = mb_substr($file->getClientOriginalName(), 0, 255);
         }
         unset($validated['file']);
-        $validated['is_completed'] = $request->boolean('is_completed');
+        // Saving a student note must not reset the teacher's review status.
+        if ($evidence->status === 'nakijken' && $validated['status'] === 'ingeleverd') {
+            $validated['status'] = 'nakijken';
+        }
         $evidence->update($validated);
 
         return back()->with('status', 'Bewijsplan opgeslagen.');
@@ -168,13 +175,13 @@ class PortfolioController extends Controller
     public function downloadEvidence(Request $request, Evidence $evidence)
     {
         $disk = $this->authorizedEvidenceDisk($request, $evidence);
-        return Storage::disk($disk)->download($evidence->file_path);
+        return Storage::disk($disk)->download($evidence->file_path, $evidence->original_file_name ?: null);
     }
 
     public function openEvidence(Request $request, Evidence $evidence)
     {
         $disk = $this->authorizedEvidenceDisk($request, $evidence);
-        return Storage::disk($disk)->response($evidence->file_path, basename($evidence->file_path), [], 'inline');
+        return Storage::disk($disk)->response($evidence->file_path, $evidence->original_file_name ?: basename($evidence->file_path), [], 'inline');
     }
 
     private function authorizedEvidenceDisk(Request $request, Evidence $evidence): string
@@ -182,8 +189,11 @@ class PortfolioController extends Controller
         $user = $request->user();
         $isOwner = $user->isStudent() && $evidence->portfolio->user_id === $user->id;
         $student = $evidence->portfolio->user;
-        $isAssignedTeacher = $user->isTeacher();
-        abort_unless($isOwner || $isAssignedTeacher, 404);
+        $teacherCanSeeEvidence = $user->isTeacher()
+            && in_array($evidence->status, ['ingeleverd', 'akkoord', 'niet akkoord'], true)
+            && ($student->groups()->where('teacher_id', $user->id)->exists()
+                || $student->reviewers()->whereKey($user->id)->exists());
+        abort_unless($isOwner || $teacherCanSeeEvidence, 404);
         abort_unless($evidence->file_path, 404);
 
         $disk = Storage::disk('local')->exists($evidence->file_path) ? 'local' : 'public';
@@ -198,7 +208,7 @@ class PortfolioController extends Controller
         if ($evidence->file_path) {
             Storage::disk('local')->delete($evidence->file_path);
             Storage::disk('public')->delete($evidence->file_path);
-            $evidence->update(['file_path' => null]);
+            $evidence->update(['file_path' => null, 'original_file_name' => null]);
         }
         return back()->with('status', 'Bestand verwijderd.');
     }

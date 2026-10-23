@@ -29,7 +29,7 @@ class TeacherController extends Controller
         $groups = $request->user()->teachingGroups()->withCount('students')->orderBy('name')->get();
         $baseGroups = Group::whereNotNull('lifecycle_status')
             ->withCount('students')
-            ->orderByRaw("FIELD(lifecycle_status, 'nieuw', 'herkansen', 'geslaagd', 'weg')")
+            ->orderByRaw("CASE lifecycle_status WHEN 'nieuw' THEN 0 WHEN 'herkansen' THEN 1 WHEN 'geslaagd' THEN 2 WHEN 'weg' THEN 3 ELSE 4 END")
             ->get();
         $availableStudents = User::where('role', 'student')->orderBy('last_name')->orderBy('first_name')->get();
         return view('teacher.groups', compact('groups', 'baseGroups', 'availableStudents'));
@@ -69,6 +69,54 @@ class TeacherController extends Controller
         $group->load(['students.portfolios.evidence', 'students.reviewers', 'workProcesses']);
         $availableStudents = User::where('role', 'student')->whereDoesntHave('groups', fn ($query) => $query->whereKey($group->id))->orderBy('last_name')->orderBy('first_name')->get();
         return view('teacher.group', compact('group', 'availableStudents'));
+    }
+
+    public function groupProgress(Request $request, Group $group): View
+    {
+        $this->authorizeGroup($request, $group);
+        $filters = $request->validate([
+            'zoek' => ['nullable', 'string', 'max:120'],
+            'status' => ['nullable', 'in:niet ingeleverd,niet akkoord,ingeleverd,akkoord,nakijken'],
+        ]);
+        $search = trim($filters['zoek'] ?? '');
+        $status = $filters['status'] ?? '';
+        $statuses = ['niet ingeleverd' => 'Nog niet ingeleverd', 'niet akkoord' => 'Niet akkoord', 'ingeleverd' => 'Ingeleverd', 'akkoord' => 'Akkoord', 'nakijken' => 'Nakijken'];
+        $group->load(['workProcesses', 'students.portfolios.evidence', 'students.groups.workProcesses', 'students.reviewers']);
+        $processes = $group->lifecycle_status === null
+            ? $group->workProcesses
+            : $group->students->flatMap(fn ($student) => $student->groups->whereNull('lifecycle_status')->flatMap->workProcesses)->unique('number')->sortBy('number')->values();
+        $statusOf = fn ($item) => array_key_exists(mb_strtolower(trim($item->status ?? '')), $statuses) ? mb_strtolower(trim($item->status)) : 'niet ingeleverd';
+        $rows = $group->students->sortBy(fn ($student) => mb_strtolower($student->displayName()))
+            ->filter(fn ($student) => $search === '' || str_contains(mb_strtolower($student->displayName().' '.$student->name), mb_strtolower($search)))
+            ->map(function ($student) use ($processes, $status, $statusOf, $request) {
+                $portfolio = $student->portfolios->first();
+                $evidence = ($portfolio?->evidence ?? collect())->filter(fn ($item) => $processes->contains(fn ($process) => (string) $process->number === (string) $item->work_process))
+                    ->filter(fn ($item) => $status === '' || $statusOf($item) === $status);
+                return ['student' => $student, 'portfolio' => $portfolio, 'evidence' => $evidence->groupBy('work_process'), 'count' => $evidence->count(), 'canReview' => $student->groups->contains('teacher_id', $request->user()->id) || $student->reviewers->contains('id', $request->user()->id)];
+            })->filter(fn ($row) => $status === '' || $row['count'] > 0)->values();
+
+        return view('teacher.group-progress', compact('group', 'processes', 'rows', 'search', 'status', 'statuses'));
+    }
+    public function updateGroup(Request $request, Group $group): RedirectResponse
+    {
+        $this->authorizeGroup($request, $group);
+        abort_if($group->lifecycle_status !== null, 403, 'Statusgroepen kunnen niet worden aangepast.');
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'photo' => ['nullable', 'image', 'max:5120'],
+            'remove_photo' => ['nullable', 'boolean'],
+        ]);
+        if ($request->boolean('remove_photo') && $group->photo_path) {
+            Storage::disk('public')->delete($group->photo_path);
+            $group->photo_path = null;
+        }
+        if ($request->hasFile('photo')) {
+            if ($group->photo_path) Storage::disk('public')->delete($group->photo_path);
+            $group->photo_path = $request->file('photo')->store('groups', 'public');
+        }
+        $group->name = $data['name'];
+        $group->save();
+        return back()->with('status', 'Groepsgegevens opgeslagen.');
     }
 
     public function showGroupSettings(Request $request, Group $group): View
@@ -141,9 +189,12 @@ class TeacherController extends Controller
         abort_if($evidence->status === 'idee', 404, 'Ideeën zijn alleen zichtbaar voor de student.');
         abort_if($evidence->status === 'akkoord', 422, 'Een akkoord bewijsstuk kan niet opnieuw worden beoordeeld.');
         $data = $request->validate([
-            'status' => ['required', 'in:akkoord,niet akkoord'],
+            'status' => ['required', 'in:akkoord,niet akkoord,nakijken'],
             'feedback' => ['nullable', 'string', 'max:2000'],
         ]);
+        if (array_key_exists('feedback', $data) && $data['feedback'] !== $evidence->feedback) {
+            $data['feedback_author_name'] = filled($data['feedback']) ? $request->user()->displayName() : null;
+        }
         $evidence->update($data);
         return back()->with('status', 'Beoordeling opgeslagen.');
     }
@@ -166,6 +217,10 @@ class TeacherController extends Controller
             'reviewer_ids' => ['required', 'array', 'min:2'],
             'reviewer_ids.*' => ['integer', 'exists:users,id'],
             'study_type' => ['required', 'in:BOL,BBL,Flex'],
+        ], [
+            'reviewer_ids.required' => 'Selecteer minimaal twee beoordelaars.',
+            'reviewer_ids.min' => 'Selecteer minimaal twee beoordelaars.',
+            'reviewer_ids.array' => 'Selecteer beoordelaars uit de lijst.',
         ]);
         $allowedGroups = $request->user()->teachingGroups()->pluck('id')->map(fn ($id) => (int) $id)->all();
         $selectedGroups = array_map('intval', $data['group_ids'] ?? []);
@@ -178,7 +233,7 @@ class TeacherController extends Controller
         $protectedGroupIds = $student->groups()->whereNull('lifecycle_status')->where(fn ($query) => $query->whereNull('teacher_id')->orWhere('teacher_id', '!=', $request->user()->id))->pluck('groups.id')->all();
         $student->groups()->sync(array_unique([...$protectedGroupIds, ...$selectedGroups, $statusGroup->id]));
         $student->reviewers()->sync($reviewerIds);
-        $student->update(['group_id' => $selectedGroups[0] ?? ($protectedGroupIds[0] ?? null), 'study_type' => $data['study_type']]);
+        $student->update(['group_id' => $selectedGroups[0] ?? ($protectedGroupIds[0] ?? $statusGroup->id), 'study_type' => $data['study_type'], 'leerweg' => strtoupper($data['study_type'])]);
         $student->portfolios()->update(['study' => $data['study_type']]);
         return redirect()->route('teacher.students.show', $student)->with('status', 'Studentgegevens opgeslagen.');
     }
@@ -195,7 +250,7 @@ class TeacherController extends Controller
             }
         }
         $student->delete();
-        return back()->with('status', 'Student uit het systeem verwijderd.');
+        return redirect()->route('teacher.students.index')->with('status', 'Student uit het systeem verwijderd.');
     }
 
     private function authorizeGroup(Request $request, Group $group): void

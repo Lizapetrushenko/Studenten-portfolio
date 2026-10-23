@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/mfa/setup', [MfaController::class, 'setup'])->name('mfa.setup');
     Route::post('/mfa/setup', [MfaController::class, 'enable'])->name('mfa.enable');
+    Route::post('/mfa/disable', [MfaController::class, 'disable'])->name('mfa.disable');
     Route::get('/bewijs/{evidence}/download', [PortfolioController::class, 'downloadEvidence'])->name('evidence.download');
     Route::get('/bewijs/{evidence}/open', [PortfolioController::class, 'openEvidence'])->name('evidence.open');
 });
@@ -50,8 +51,12 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('dashboard');
     Route::post('/docenten', [AdminController::class, 'createTeacher'])->name('teachers.store');
+    Route::get('/docenten/{teacher}', [AdminController::class, 'showTeacher'])->name('teachers.show');
     Route::post('/groepen', [AdminController::class, 'createGroup'])->name('groups.store');
+    Route::get('/groepen/{group}', [AdminController::class, 'showGroup'])->name('groups.show');
+    Route::patch('/groepen/{group}', [AdminController::class, 'updateGroup'])->name('groups.update');
     Route::patch('/studenten/{student}/groep', [AdminController::class, 'assignStudent'])->name('students.group');
+    Route::get('/studenten/{student}', [AdminController::class, 'showStudent'])->name('students.show');
     Route::delete('/gebruikers/{user}', [AdminController::class, 'removeUser'])->name('users.destroy');
 });
 
@@ -61,8 +66,10 @@ Route::middleware(['auth', 'verified', 'role:teacher'])->prefix('docent')->name(
     Route::get('/groepen', [TeacherController::class, 'groups'])->name('groups.index');
     Route::get('/werkprocessen', [TeacherController::class, 'workProcesses'])->name('work-processes.index');
     Route::get('/groepen/{group}', [TeacherController::class, 'showGroup'])->name('groups.show');
+    Route::patch('/groepen/{group}', [TeacherController::class, 'updateGroup'])->name('groups.update');
     Route::get('/studenten', [TeacherController::class, 'students'])->name('students.index');
     Route::get('/studenten/{student}', [TeacherController::class, 'showStudent'])->name('students.show');
+    Route::get('/groepen/{group}/voortgang', [TeacherController::class, 'groupProgress'])->name('groups.progress');
     Route::get('/groepen/{group}/instellingen', [TeacherController::class, 'showGroupSettings'])->name('groups.settings');
     Route::post('/groepen/{group}/werkprocessen', [TeacherController::class, 'storeGroupWorkProcess'])->name('groups.work-processes.store');
     Route::patch('/groepen/{group}/werkprocessen/{workProcess}', [TeacherController::class, 'updateGroupWorkProcess'])->name('groups.work-processes.update');
