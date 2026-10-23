@@ -29,7 +29,7 @@ class TeacherController extends Controller
         $groups = $request->user()->teachingGroups()->withCount('students')->orderBy('name')->get();
         $baseGroups = Group::whereNotNull('lifecycle_status')
             ->withCount('students')
-            ->orderByRaw("FIELD(lifecycle_status, 'nieuw', 'herkansen', 'geslaagd', 'weg')")
+            ->orderByRaw("CASE lifecycle_status WHEN 'nieuw' THEN 0 WHEN 'herkansen' THEN 1 WHEN 'geslaagd' THEN 2 WHEN 'weg' THEN 3 ELSE 4 END")
             ->get();
         $availableStudents = User::where('role', 'student')->orderBy('last_name')->orderBy('first_name')->get();
         return view('teacher.groups', compact('groups', 'baseGroups', 'availableStudents'));
@@ -186,7 +186,7 @@ class TeacherController extends Controller
     {
         $student = $evidence->portfolio->user;
         abort_unless($student->isStudent() && ($student->groups()->where('teacher_id', $request->user()->id)->exists() || $student->reviewers()->whereKey($request->user()->id)->exists()), 404);
-        abort_unless(in_array($evidence->status, ['ingeleverd', 'niet akkoord'], true), 404, 'Alleen ingeleverde bewijsstukken kunnen worden beoordeeld.');
+        abort_if($evidence->status === 'idee', 404, 'Ideeën zijn alleen zichtbaar voor de student.');
         abort_if($evidence->status === 'akkoord', 422, 'Een akkoord bewijsstuk kan niet opnieuw worden beoordeeld.');
         $data = $request->validate([
             'status' => ['required', 'in:akkoord,niet akkoord,nakijken'],
@@ -233,7 +233,7 @@ class TeacherController extends Controller
         $protectedGroupIds = $student->groups()->whereNull('lifecycle_status')->where(fn ($query) => $query->whereNull('teacher_id')->orWhere('teacher_id', '!=', $request->user()->id))->pluck('groups.id')->all();
         $student->groups()->sync(array_unique([...$protectedGroupIds, ...$selectedGroups, $statusGroup->id]));
         $student->reviewers()->sync($reviewerIds);
-        $student->update(['group_id' => $selectedGroups[0] ?? ($protectedGroupIds[0] ?? $statusGroup->id), 'study_type' => $data['study_type']]);
+        $student->update(['group_id' => $selectedGroups[0] ?? ($protectedGroupIds[0] ?? $statusGroup->id), 'study_type' => $data['study_type'], 'leerweg' => strtoupper($data['study_type'])]);
         $student->portfolios()->update(['study' => $data['study_type']]);
         return redirect()->route('teacher.students.show', $student)->with('status', 'Studentgegevens opgeslagen.');
     }

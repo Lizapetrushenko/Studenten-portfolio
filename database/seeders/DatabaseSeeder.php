@@ -33,6 +33,6 @@ class DatabaseSeeder extends Seeder
         }
 
         // Administrator permissions are assigned here, never through registration.
-        $admin->forceFill(['is_admin' => true])->save();
+        $admin->forceFill(['is_admin' => true, 'role' => 'admin', 'education' => null])->save();
     }
 }

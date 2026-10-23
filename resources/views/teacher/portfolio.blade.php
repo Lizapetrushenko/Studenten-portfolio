@@ -8,7 +8,7 @@
             @if($portfolio->bio)<p class="mt-3">{{ $portfolio->bio }}</p>@endif
         </section>
         @foreach($workProcesses as $process)
-            @php($items = $portfolio->evidence->where('work_process', $process->number)->whereIn('status', ['ingeleverd', 'akkoord', 'niet akkoord']))
+            @php($items = $portfolio->evidence->where('work_process', $process->number)->where('status', '!=', 'idee'))
             <section class="panel">
                 <div class="section-title"><div><p class="eyebrow">WERKPROCES {{ $process->number }}</p><h2>{{ $process->name }}</h2></div><span class="count">{{ $items->count() }} bewijsstukken</span></div>
                 @forelse($items as $item)

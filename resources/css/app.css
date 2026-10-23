@@ -2418,22 +2418,79 @@ select:focus {
 }
 /* Feedback and delete actions have their own space below each evidence form. */
 .teacher-feedback {
-    margin: 0 0 1rem 51px;
-    padding: 1rem 1.15rem;
-    min-height: 110px;
-    border: 1px solid var(--line);
-    border-left: 3px solid var(--accent);
-    border-radius: 5px;
-    background: #fff;
-    color: var(--ink);
+    position: relative;
+    width: fit-content;
+    max-width: min(36rem, calc(100% - 51px));
+    margin: .5rem 0 1.5rem 51px;
+    padding: .9rem 1.25rem;
+    border: 0;
+    border-radius: 1.5rem;
+    background: #302d73;
+    color: #fff;
     overflow-wrap: anywhere;
 }
-.teacher-feedback h4 { margin: 0 0 .6rem; font-size: .9rem; font-weight: 600; }
-.teacher-feedback p { margin: 0; font-size: 1rem; line-height: 1.65; white-space: pre-wrap; }
+.teacher-feedback::after {
+    content: "";
+    position: absolute;
+    left: 1.25rem;
+    bottom: -10px;
+    width: 0;
+    height: 0;
+    border-top: 16px solid #302d73;
+    border-right: 16px solid transparent;
+    transform: rotate(10deg);
+}
+.teacher-feedback h4 { margin: 0 0 .4rem; color: #fff; font-size: .85rem; font-weight: 600; }
+.teacher-feedback p { margin: 0; color: #fff; font-size: .95rem; line-height: 1.5; white-space: pre-wrap; }
 .process-group > .file-actions { margin: .75rem 0 1.25rem 51px; align-items: center; }
 .process-group > .delete-idea-form { margin: .75rem 0 1.25rem 51px; }
 .evidence-review-form textarea { min-height: 120px; height: 120px; }
 @media (max-width: 720px) {
-    .teacher-feedback { margin-left: 46px; }
+    .teacher-feedback { width: fit-content; max-width: calc(100% - 46px); margin-left: 46px; padding: .85rem 1rem; border-radius: 1.25rem; }
     .process-group > .file-actions, .process-group > .delete-idea-form { margin-left: 46px; }
+}
+
+/* Blue interactions balance the orange accents. */
+:root {
+    --interaction-blue: #2458a6;
+    --interaction-navy: #302d73;
+    --interaction-soft: #eef3fc;
+}
+
+:is(.button, .auth-submit, .deltion-button):not(:disabled):is(:hover, :focus-visible) {
+    background: var(--interaction-navy);
+    border-color: var(--interaction-navy);
+    color: #fff;
+}
+
+.teacher-link:is(:hover, :focus-visible),
+.saved-file-download:is(:hover, :focus-visible) {
+    color: var(--interaction-blue);
+}
+
+.back-button:is(:hover, :focus-visible),
+.button.secondary-button:is(:hover, :focus-visible) {
+    background: var(--interaction-soft);
+    border-color: var(--interaction-blue);
+    color: var(--interaction-navy);
+}
+
+.screen-card:is(:hover, :focus-visible) {
+    border-color: var(--interaction-blue);
+    background: var(--interaction-soft);
+}
+
+.screen-card:is(:hover, :focus-visible) strong {
+    color: var(--interaction-navy);
+}
+
+:is(.kerntaak-tab, .process-tab):hover {
+    background: var(--interaction-soft);
+    border-color: var(--interaction-blue);
+    color: var(--interaction-navy);
+}
+
+:is(.teacher-link, .back-button, .button, .auth-submit, .screen-card, .kerntaak-tab, .process-tab):focus-visible {
+    outline: 2px solid var(--interaction-blue);
+    outline-offset: 3px;
 }

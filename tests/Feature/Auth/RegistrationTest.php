@@ -19,7 +19,8 @@ class RegistrationTest extends TestCase
         foreach (['BOL', 'BBL', 'FLEX'] as $leerweg) {
             $email = strtolower($leerweg).'@example.com';
             $response = $this->post('/register', [
-                'name' => 'Test User',
+                'first_name' => 'Test',
+                'last_name' => 'User',
                 'email' => $email,
                 'password' => 'password',
                 'password_confirmation' => 'password',
@@ -28,7 +29,7 @@ class RegistrationTest extends TestCase
 
             $this->assertAuthenticated();
             $response->assertRedirect(route('dashboard', absolute: false));
-            $this->assertDatabaseHas('users', ['email' => $email, 'leerweg' => $leerweg]);
+            $this->assertDatabaseHas('users', ['email' => $email, 'leerweg' => $leerweg, 'student_number' => strtolower($leerweg), 'education' => 'Software Developer']);
             $this->post('/logout');
         }
     }
@@ -37,7 +38,8 @@ class RegistrationTest extends TestCase
     {
         foreach ([null, 'INVALID'] as $leerweg) {
             $response = $this->post('/register', [
-                'name' => 'Test User',
+                'first_name' => 'Test',
+                'last_name' => 'User',
                 'email' => 'test@example.com',
                 'password' => 'password',
                 'password_confirmation' => 'password',

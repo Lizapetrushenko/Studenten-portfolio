@@ -51,7 +51,7 @@ class RegisteredUserController extends Controller
             'name' => $name,
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'],
-            'preferred_name' => $validated['preferred_name'] ?: $validated['first_name'],
+            'preferred_name' => ($validated['preferred_name'] ?? null) ?: $validated['first_name'],
             'student_number' => $validated['student_number'],
             'username' => ($validated['username'] ?? null) ?: strtolower(str_replace(' ', '-', $name)) . '-' . substr(md5($validated['email']), 0, 6),
             'email' => $validated['email'],

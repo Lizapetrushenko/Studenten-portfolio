@@ -1,16 +1,5 @@
 <x-app-layout headerTitle="Mijn portfolio">
     <div class="portal-shell portfolio-page">
-        <div class="portfolio-sections">
-            <section class="panel portfolio-panel {{ !$portfolio ? 'portfolio-panel-empty' : '' }}" x-data="{ editing: false }">
-                <div class="section-title">
-                    <div>
-                        <p class="eyebrow">01 / PROFIEL</p>
-                        <h2>Portfolio-informatie</h2>
-                    </div>
-                    <div class="flex items-center gap-3"><span class="tag">{{ $portfolio ? 'Actief' : 'Start hier' }}</span>@if($portfolio && !$portfolioLocked && !$submitOnly)<button type="button" class="button tiny-button" @click.prevent="editing = !editing" x-text="editing ? 'Annuleren' : 'Aanpassen'"></button>@endif</div>
-                </div>
-            @endif
-            
             <div class="portfolio-sections">
                 <section class="panel portfolio-panel {{ !$portfolio ? 'portfolio-panel-empty' : '' }}" x-data="{ editing: false }">
                     <div class="section-title"><div><p class="eyebrow">01 / PROFIEL</p><h2>Portfolio-informatie</h2></div><div class="flex items-center gap-3"><span class="tag">{{ $portfolio ? 'Actief' : 'Start hier' }}</span>@if($portfolio && !$portfolioLocked && !$submitOnly)<button type="button" class="button tiny-button" @click.prevent="editing = !editing" x-text="editing ? 'Annuleren' : 'Aanpassen'"></button>@endif</div></div>
@@ -52,7 +41,7 @@
                         @else
                             <p>Je portfolio is vergrendeld voor deze groepsstatus.</p>
                         @endif
-                    @endifhttps://github.com/Lizapetrushenko/Studenten-portfolio/pull/9/conflict?name=resources%252Fviews%252Fportfolio-overview.blade.php&ancestor_oid=36b682c3c6c1cf676ae1e4cc7ec422581f6aa5b4&base_oid=1d90796ec953ee5a19eb8d7c2e0a1d0a589c54ee&head_oid=04f8f91d0d7251d1439067a87a26b991cc0d31bd
+                    @endif
                 </section>
 
                 @if($portfolio)
@@ -77,38 +66,7 @@
                         @endif
                     </section>
                 @endif
-                @endif
-            </section>
-
-            @if($portfolio)
-            <!-- Spin Diagram Widget Section -->
-            <section class="panel spin-chart-panel">
-                <div class="section-title">
-                    <div>
-                        <p class="eyebrow">03 / OVERZICHT</p>
-                        <h2>Van je werkzaamheden</h2>
-                    </div>
-                </div>
-                @if(count($processes))
-                <div class="spin-chart-widget-small">
-                    <div class="spin-chart-container-small" data-chart-data="{{ $spinChartData }}" data-chart-labels="{{ json_encode(collect($processes)->map(fn ($process) => $process['kerntaak'] . $process['work_label'])->values()) }}">
-                        <canvas id="spinChart"></canvas>
-                    </div>
-                    <div class="spin-legend-small" aria-label="Legenda status bewijsstukken">
-                        <span class="legend-item"><i class="legend-dot" style="background:#22c55e"></i>akkoord</span>
-                        <span class="legend-item"><i class="legend-dot" style="background:#dc2626"></i>niet akkoord</span>
-                        <span class="legend-item"><i class="legend-dot" style="background:#f97316"></i>ingeleverd</span>
-                        <span class="legend-item"><i class="legend-dot" style="background:#fbbf24"></i>in proces</span>
-                        <span class="legend-item"><i class="legend-dot" style="background:#d87bd8"></i>idee</span>
-                    </div>
-                </div>
-                @else
-                <p class="spin-chart-empty">Het spindiagram verschijnt zodra werkprocessen aan jouw groep zijn gekoppeld.</p>
-                @endif
-            </section>
-            @endif
-        </div>
-
+            </div>
         @php
         $kerntaken = collect($processes)->groupBy('kerntaak');
         $requestedProcess = (string) request('werkproces', '');
@@ -171,14 +129,12 @@
                                 <div class="plan-number">{{ $item->item_number }}</div>
                                 <div class="plan-main"><label class="evidence-name">Naam van bewijsstuk<input name="title" value="{{ $item->title }}" placeholder="Schrijf de naam van je bewijsstuk..." @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')></label></div>
                                 <div class="plan-fields">
-                                    @if($item->status !== 'akkoord')
-                                    <label><span class="info-label">Status bewijsstuk</span><select name="status" x-model="evidenceStatus" required @disabled($portfolioLocked || $submitOnly)>
-                                            @if($item->status === 'niet akkoord')<option value="" disabled selected>Kies een nieuwe status</option>@endif
+                                    <label><span class="info-label">Status bewijsstuk</span><select name="status" x-model="evidenceStatus" required @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')>
+                                            @if(in_array($item->status, ['akkoord', 'niet akkoord', 'nakijken'], true))<option value="{{ $item->status }}" selected>{{ ucfirst($item->status) }}</option>@endif
                                             <option value="idee" @selected($item->status === 'idee')>Idee</option>
-                                            <option value="in proces" @selected($item->status === 'in proces')>Bezig</option>
+                                            <option value="bezig" @selected($item->status === 'bezig')>Bezig</option>
                                             <option value="ingeleverd" @selected($item->status === 'ingeleverd')>Ingeleverd</option>
                                         </select></label>
-                                    @endif
                                     <p class="evidence-idea-visibility" x-cloak x-show="evidenceStatus === 'idee'">Je docent kan dit bewijsstuk en je notitie niet zien zolang de status op Idee staat. Kies ‘Ingeleverd’ wanneer je het wilt delen.</p>
                                 </div>
                                 <label class="plan-note">Notitie / idee<textarea name="note" rows="2" placeholder="Schrijf hier je idee of notitie..." @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')>{{ $item->note }}</textarea></label><label class="submitted-where">Waar ingeleverd? <span>(niet verplicht)</span><input name="submitted_where" value="{{ $item->submitted_where }}" placeholder="Teams, Canvas of SharePoint" @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')></label>
@@ -205,11 +161,11 @@
                                 @if(!$portfolioLocked && !$submitOnly && $item->status !== 'akkoord')<button class="button small-button" type="submit">Wijzigingen opslaan</button>@endif
                             </form>
                             @if(in_array($item->status, ['akkoord', 'niet akkoord'], true))<p class="teacher-status-line"><strong>Docent status:</strong> {{ ucwords($item->status) }}</p>@endif
-                            @if($item->feedback)<div class="teacher-feedback-bubble">{{ $item->feedback }}</div>@endif
+                            @if($item->feedback)<aside class="teacher-feedback"><h4>Notitie van {{ $item->feedback_author_name ?: 'beoordelaar' }}</h4><p>{{ $item->feedback }}</p></aside>@endif
                             @if($item->status !== 'akkoord' && !$portfolioLocked && !$submitOnly)
                             <div class="file-actions">
                                 @if($item->file_path)<form method="POST" action="{{ route('evidence.file.destroy', $item) }}" class="delete-idea-form" data-confirm="Weet u zeker dat u dit bestand wilt verwijderen?">@csrf @method('DELETE')<button class="delete-idea" type="submit">Bestand verwijderen</button></form>@endif
-                                <form method="POST" action="{{ route('evidence.destroy', $item) }}" class="delete-idea-form" data-confirm="Weet u zeker dat u dit bewijsstuk en het bijbehorende bestand wilt verwijderen?">@csrf @method('DELETE')<button class="delete-idea" type="submit">Bewijsstuk verwijderen</button></form>
+                                <form method="POST" action="{{ route('evidence.destroy', $item) }}" class="delete-idea-form" data-confirm="Weet u zeker dat u dit bewijsstuk en het bijbehorende bestand wilt verwijderen?">@csrf @method('DELETE')<button class="evidence-delete-button" type="submit">Bewijsstuk verwijderen</button></form>
                             </div>
                             @endif
                             @empty
@@ -230,7 +186,7 @@
                                 <label>Status<select name="status" x-model="newEvidenceStatus" required>
                                         <option value="" disabled selected>Selecteer een status...</option>
                                         <option value="idee">Idee</option>
-                                        <option value="in proces">Bezig</option>
+                                        <option value="bezig">Bezig</option>
                                         <option value="ingeleverd">Ingeleverd</option>
                                     </select></label>
                                 <p class="evidence-idea-visibility" x-cloak x-show="newEvidenceStatus === 'idee'">Je docent kan dit bewijsstuk en je notitie niet zien zolang de status op Idee staat. Kies ‘Ingeleverd’ wanneer je het wilt delen.</p>

@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/mfa/setup', [MfaController::class, 'setup'])->name('mfa.setup');
     Route::post('/mfa/setup', [MfaController::class, 'enable'])->name('mfa.enable');
+    Route::post('/mfa/disable', [MfaController::class, 'disable'])->name('mfa.disable');
     Route::get('/bewijs/{evidence}/download', [PortfolioController::class, 'downloadEvidence'])->name('evidence.download');
     Route::get('/bewijs/{evidence}/open', [PortfolioController::class, 'openEvidence'])->name('evidence.open');
 });
