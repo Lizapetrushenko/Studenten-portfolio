@@ -14,11 +14,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const statusColors = {
         akkoord: '#22c55e',
         ingeleverd: '#f97316',
-        'in proces': '#fbbf24',
+        'bezig': '#fbbf24',
         'niet akkoord': '#dc2626',
-        idee: '#d87bd8'
+        'idee': '#d87bd8',
+        nakijken: '#4b7fc1'
     };
-    const statuses = ['akkoord', 'ingeleverd', 'in proces', 'niet akkoord', 'idee'];
+    const statuses = ['akkoord', 'ingeleverd', 'bezig', 'niet akkoord', 'idee', 'nakijken'];
     const datasets = statuses.map(status => ({
         label: status.charAt(0).toUpperCase() + status.slice(1),
         data: processCodes.map(code => chartData[code][status] || 0),
@@ -42,8 +43,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 r: {
                     beginAtZero: true,
                     max: 5,
-                    ticks: { stepSize: 1, font: { size: 8 } },
-                    pointLabels: { font: { size: 8 } },
+                    ticks: { stepSize: 1, color: '#52616b', font: { size: 11 } },
+                    pointLabels: { color: '#17211f', padding: 8, font: { size: 12, weight: '600' } },
                     grid: { color: '#e5e7eb' }
                 }
             },

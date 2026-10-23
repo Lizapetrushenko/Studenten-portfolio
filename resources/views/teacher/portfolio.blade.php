@@ -1,6 +1,7 @@
 <x-app-layout headerTitle="Portfolio van {{ $student->name }}">
-    <div class="portal-shell space-y-6">
-        <a href="{{ route('teacher.students.show', $student) }}" class="underline">← Terug naar studentgegevens</a>
+    <div class="portal-shell space-y-6 teacher-portfolio-page">
+        <a href="{{ route('teacher.students.show', $student) }}" class="teacher-link back-button">← Terug naar studentgegevens</a>
+        @if (session('status'))<div class="panel" role="status">{{ session('status') }}</div>@endif
         @if ($errors->any())<div class="panel text-red-700">{{ $errors->first() }}</div>@endif
         <section class="panel">
             <p class="eyebrow">STUDENTPORTFOLIO</p><h2>{{ $portfolio->title }}</h2><p>{{ $student->displayName() }} · {{ $student->email }} · {{ $student->student_number }} · {{ $student->study_type ?: $portfolio->study }}</p>
@@ -11,12 +12,12 @@
             <section class="panel">
                 <div class="section-title"><div><p class="eyebrow">WERKPROCES {{ $process->number }}</p><h2>{{ $process->name }}</h2></div><span class="count">{{ $items->count() }} bewijsstukken</span></div>
                 @forelse($items as $item)
-                    <article class="border-t py-5 space-y-3">
-                        <div class="flex flex-wrap justify-between gap-3"><h3 class="text-lg font-semibold">{{ $item->title ?: 'Bewijsstuk '.$item->item_number }}</h3><span class="tag">{{ $item->status ?: 'Nog niet beoordeeld' }}</span></div>
+                    <article id="bewijs-{{ $item->id }}" class="border-t py-5 space-y-3">
+                        <div class="review-evidence-heading"><h3 class="text-lg font-semibold">{{ $item->title ?: 'Bewijsstuk '.$item->item_number }}</h3><span class="review-status-label progress-{{ in_array($item->status, ['ingeleverd', 'akkoord', 'niet akkoord', 'nakijken'], true) ? str_replace(' ', '-', $item->status) : 'niet-ingeleverd' }}">{{ $item->status ? ucfirst($item->status) : 'Nog niet ingeleverd' }}</span></div>
                         @if($item->description)<p>{{ $item->description }}</p>@endif
                         @if($item->idea)<p><strong>Idee:</strong> {{ $item->idea }}</p>@endif
                         @if($item->note)<p><strong>Studentnotitie:</strong> {{ $item->note }}</p>@endif
-                        @if($item->feedback)<p><strong>Notitie docent:</strong> {{ $item->feedback }}</p>@endif
+                        @if($item->feedback)<p><strong>Notitie van {{ $item->feedback_author_name ?: 'beoordelaar' }}:</strong> {{ $item->feedback }}</p>@endif
                         @if($item->submitted_where)<p><strong>Ingeleverd via:</strong> {{ $item->submitted_where }}</p>@endif
                         @if($item->url)<p><a class="underline" href="{{ $item->url }}" target="_blank" rel="noopener">Bewijsstuk openen</a></p>@endif
                         @if($item->file_path)

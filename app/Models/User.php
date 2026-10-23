@@ -17,6 +17,10 @@ class User extends Authenticatable
 
     protected static function booted(): void
     {
+        static::saving(function (User $user) {
+            $user->education = ($user->role ?? 'student') === 'student' ? 'Software Developer' : null;
+        });
+
         static::creating(function (User $user) {
             $user->role ??= 'student';
             if ($user->isStudent()) {

@@ -1,6 +1,6 @@
 <x-app-layout headerTitle="Studentenoverzicht">
     <div class="portal-shell space-y-6">
-        <a href="{{ route('teacher.dashboard') }}" class="underline">← Terug naar docentendashboard</a>
+        <a href="{{ route('teacher.dashboard') }}" class="teacher-link back-button">← Terug naar docentendashboard</a>
         <section class="panel">
             <div class="section-title"><div><p class="eyebrow">DOCENT · OVERZICHT</p><h2>Lijst van studenten</h2></div><span class="count">{{ $students->count() }} studenten</span></div>
             <div x-data="{ search: '', group: '', reviewer: '' }">

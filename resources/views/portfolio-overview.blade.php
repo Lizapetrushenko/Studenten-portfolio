@@ -9,40 +9,73 @@
                     </div>
                     <div class="flex items-center gap-3"><span class="tag">{{ $portfolio ? 'Actief' : 'Start hier' }}</span>@if($portfolio && !$portfolioLocked && !$submitOnly)<button type="button" class="button tiny-button" @click.prevent="editing = !editing" x-text="editing ? 'Annuleren' : 'Aanpassen'"></button>@endif</div>
                 </div>
+            @endif
+            
+            <div class="portfolio-sections">
+                <section class="panel portfolio-panel {{ !$portfolio ? 'portfolio-panel-empty' : '' }}" x-data="{ editing: false }">
+                    <div class="section-title"><div><p class="eyebrow">01 / PROFIEL</p><h2>Portfolio-informatie</h2></div><div class="flex items-center gap-3"><span class="tag">{{ $portfolio ? 'Actief' : 'Start hier' }}</span>@if($portfolio && !$portfolioLocked && !$submitOnly)<button type="button" class="button tiny-button" @click.prevent="editing = !editing" x-text="editing ? 'Annuleren' : 'Aanpassen'"></button>@endif</div></div>
+                    
+                    @if($portfolio)
+                        <!-- Portfolio Bestaande Info -->
+                        <div class="portfolio-info" x-show="!editing">
+                            <div class="info-item">
+                                <label class="info-label">Projectnaam:</label>
+                                <p class="info-value">{{ $portfolio->title }}</p>
+                            </div>
+                            <div class="info-item">
+                                <label class="info-label">Leerweg:</label>
+                                <p class="info-value">{{ auth()->user()->leerweg ?: 'Nog niet ingesteld' }}</p>
+                            </div>
+                            <div class="info-item">
+                                <label class="info-label">Korte introductie:</label>
+                                <p class="info-value">{{ $portfolio->bio }}</p>
+                            </div>
+                           
+                        </div>
+                        <form method="POST" action="{{ route('portfolio.store') }}" class="form-grid portfolio-form" x-show="editing" x-cloak>@csrf
+                            <label>Projectnaam<input name="title" value="{{ $portfolio->title }}" placeholder="Schrijf zelf je projectnaam" required></label>
+                            <label class="full">Korte introductie<textarea name="bio" rows="3" placeholder="Waar ben je trots op?">{{ $portfolio->bio }}</textarea></label>
+                            <div class="full"><button class="button" type="submit">Wijzigingen opslaan</button></div>
+                        </form>
+                        @if(!$portfolioLocked && !$submitOnly && !$portfolio->evidence->contains('status', 'akkoord'))
+                            <form method="POST" action="{{ route('portfolio.destroy', $portfolio) }}" class="mt-4" onsubmit="return confirm('Weet je zeker dat je je portfolio en alle bewijsstukken wilt verwijderen?')">@csrf @method('DELETE')<button class="evidence-delete-button" type="submit"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6" /></svg>Portfolio verwijderen</button></form>
+                        @endif
+                    @else
+                        <!-- Portfolio Invulformulier -->
+                        @if(!$portfolioLocked)
+                        <form method="POST" action="{{ route('portfolio.store') }}" class="form-grid portfolio-form">@csrf
+                            <label>Projectnaam<input name="title" value="{{ old('title') }}" placeholder="Schrijf zelf je projectnaam" required></label>
+                            <label>Leerweg<input value="{{ auth()->user()->leerweg ?: 'Nog niet ingesteld' }}" readonly></label>
+                            <label class="full">Korte introductie<textarea name="bio" rows="3" placeholder="Waar ben je trots op?">{{ old('bio') }}</textarea></label>
+                            <div class="full"><button class="button" type="submit">Portfolio opslaan</button></div>
+                        </form>
+                        @else
+                            <p>Je portfolio is vergrendeld voor deze groepsstatus.</p>
+                        @endif
+                    @endifhttps://github.com/Lizapetrushenko/Studenten-portfolio/pull/9/conflict?name=resources%252Fviews%252Fportfolio-overview.blade.php&ancestor_oid=36b682c3c6c1cf676ae1e4cc7ec422581f6aa5b4&base_oid=1d90796ec953ee5a19eb8d7c2e0a1d0a589c54ee&head_oid=04f8f91d0d7251d1439067a87a26b991cc0d31bd
+                </section>
 
                 @if($portfolio)
-                <!-- Portfolio Bestaande Info -->
-                <div class="portfolio-info" x-show="!editing">
-                    <div class="info-item">
-                        <label class="info-label">Projectnaam:</label>
-                        <p class="info-value">{{ $portfolio->title }}</p>
-                    </div>
-                    <div class="info-item">
-                        <label class="info-label">Leerweg:</label>
-                        <p class="info-value">{{ auth()->user()->leerweg ?: 'Nog niet ingesteld' }}</p>
-                    </div>
-                    <div class="info-item">
-                        <label class="info-label">Korte introductie:</label>
-                        <p class="info-value">{{ $portfolio->bio }}</p>
-                    </div>
-
-                </div>
-                <form method="POST" action="{{ route('portfolio.store') }}" class="form-grid portfolio-form" x-show="editing" x-cloak>@csrf
-                    <label>Projectnaam<input name="title" value="{{ $portfolio->title }}" placeholder="Schrijf zelf je projectnaam" required></label>
-                    <label class="full">Korte introductie<textarea name="bio" rows="3" placeholder="Waar ben je trots op?">{{ $portfolio->bio }}</textarea></label>
-                    <div class="full"><button class="button" type="submit">Wijzigingen opslaan</button></div>
-                </form>
-                @else
-                <!-- Portfolio Invulformulier -->
-                @if(!$portfolioLocked)
-                <form method="POST" action="{{ route('portfolio.store') }}" class="form-grid portfolio-form">@csrf
-                    <label>Projectnaam<input name="title" value="{{ old('title') }}" placeholder="Schrijf zelf je projectnaam" required></label>
-                    <label>Leerweg<input value="{{ auth()->user()->leerweg ?: 'Nog niet ingesteld' }}" readonly></label>
-                    <label class="full">Korte introductie<textarea name="bio" rows="3" placeholder="Waar ben je trots op?">{{ old('bio') }}</textarea></label>
-                    <div class="full"><button class="button" type="submit">Portfolio opslaan</button></div>
-                </form>
-                @else
-                <p>Je portfolio is vergrendeld voor deze groepsstatus.</p>
+                    <!-- Spin Diagram Widget Section -->
+                    <section class="panel spin-chart-panel">
+                        <div class="section-title"><div><p class="eyebrow">03 / OVERZICHT</p><h2>Van je werkzaamheden</h2></div></div>
+                        @if(count($processes))
+                            <div class="spin-chart-widget-small">
+                                <div class="spin-chart-container-small" data-chart-data="{{ $spinChartData }}" data-chart-labels="{{ json_encode(collect($processes)->map(fn ($process) => $process['kerntaak'] . $process['work_label'])->values()) }}">
+                                    <canvas id="spinChart"></canvas>
+                                </div>
+                                <div class="spin-legend-small" aria-label="Legenda status bewijsstukken">
+                                    <span class="legend-item"><i class="legend-dot" style="background:#22c55e"></i>akkoord</span>
+                                    <span class="legend-item"><i class="legend-dot" style="background:#dc2626"></i>niet akkoord</span>
+                                    <span class="legend-item"><i class="legend-dot" style="background:#f97316"></i>ingeleverd</span>
+                                    <span class="legend-item"><i class="legend-dot" style="background:#fbbf24"></i>bezig</span>
+                                    <span class="legend-item"><i class="legend-dot" style="background:#d87bd8"></i>idee</span><span class="legend-item"><i class="legend-dot" style="background:#4b7fc1"></i>nakijken</span>
+                                </div>
+                            </div>
+                        @else
+                            <p class="spin-chart-empty">Het spindiagram verschijnt zodra werkprocessen aan jouw groep zijn gekoppeld.</p>
+                        @endif
+                    </section>
                 @endif
                 @endif
             </section>

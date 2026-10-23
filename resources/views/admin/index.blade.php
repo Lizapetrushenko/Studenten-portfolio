@@ -10,8 +10,8 @@
                 <button type="button" class="screen-card text-left" @click="section = 'groups'"><span class="tag">{{ $groups->count() }} groepen</span><h2>Groepen</h2><p>De vaste statusgroepen en alle andere groepen bekijken.</p><strong>Openen →</strong></button>
             </div>
         </section>
-        <nav class="flex flex-wrap gap-2" aria-label="Admin schermen" x-show="section !== 'dashboard'" x-cloak>
-            <button class="button tiny-button" type="button" @click="section = 'dashboard'">← Dashboard</button>
+        <nav class="flex flex-wrap gap-2" aria-label="Admin schermen" x-show="section !== 'dashboard'">
+            <button class="teacher-link back-button" type="button" @click="section = 'dashboard'">← Dashboard</button>
             <button class="button tiny-button" type="button" @click="section = 'teachers'">Docenten</button>
             <button class="button tiny-button" type="button" @click="section = 'students'">Studenten</button>
             <button class="button tiny-button" type="button" @click="section = 'groups'">Groepen</button>

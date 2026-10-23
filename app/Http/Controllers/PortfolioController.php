@@ -51,9 +51,10 @@ class PortfolioController extends Controller
             $counts = [
                 'akkoord' => $processEvidence->where('status', 'akkoord')->count(),
                 'ingeleverd' => $processEvidence->where('status', 'ingeleverd')->count(),
-                'in proces' => $processEvidence->where('status', 'in proces')->count(),
+                'bezig' => $processEvidence->where('status', 'bezig')->count(),
                 'niet akkoord' => $processEvidence->where('status', 'niet akkoord')->count(),
-                'idee' => $processEvidence->filter(fn (Evidence $item) => $item->status === 'idee' || filled($item->idea))->count(),
+                'idee' => $processEvidence->where('status', 'idee')->count(),
+                'nakijken' => $processEvidence->where('status', 'nakijken')->count(),
             ];
 
             $chartData[$code] = $counts;
@@ -72,8 +73,9 @@ class PortfolioController extends Controller
             'akkoord' => $portfolio->evidence->where('status', 'akkoord')->count(),
             'niet akkoord' => $portfolio->evidence->where('status', 'niet akkoord')->count(),
             'ingeleverd' => $portfolio->evidence->where('status', 'ingeleverd')->count(),
-            'in proces' => $portfolio->evidence->where('status', 'in proces')->count(),
-            'idee' => $portfolio->evidence->filter(fn (Evidence $item) => $item->status === 'idee' || filled($item->idea))->count(),
+            'bezig' => $portfolio->evidence->where('status', 'bezig')->count(),
+            'idee' => $portfolio->evidence->where('status', 'idee')->count(),
+            'nakijken' => $portfolio->evidence->where('status', 'nakijken')->count(),
         ];
     }
 
@@ -110,7 +112,7 @@ class PortfolioController extends Controller
             'title' => ['required', 'string', 'max:120'],
             'work_process' => ['required', 'integer', 'min:1'],
             'category' => ['required', 'string', 'max:60'],
-            'status' => ['required', 'in:idee,in proces,ingeleverd'],
+            'status' => ['required', 'in:idee,bezig,ingeleverd'],
             'note' => ['nullable', 'string', 'max:2000'],
             'description' => ['nullable', 'string', 'max:1000'],
             'submitted_where' => ['nullable', 'string', 'max:255'],
@@ -140,8 +142,9 @@ class PortfolioController extends Controller
             'title' => ['nullable', 'string', 'max:120'],
             'note' => ['nullable', 'string', 'max:2000'],
             'submitted_where' => ['nullable', 'string', 'max:255'],
-            'status' => ['required', 'in:idee,in proces,ingeleverd'],
-            'file' => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
+            'status' => ['required', \Illuminate\Validation\Rule::in(array_merge(['idee', 'bezig', 'ingeleverd'], in_array($evidence->status, ['nakijken', 'niet akkoord'], true) ? [$evidence->status] : []))],
+            'is_completed' => ['nullable', 'boolean'],
+            'file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,doc,docx', 'max:5120'],
         ]);
         if ($request->hasFile('file')) {
             if ($evidence->file_path) {
