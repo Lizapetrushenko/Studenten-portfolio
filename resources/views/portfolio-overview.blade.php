@@ -26,9 +26,6 @@
                             <label class="full">Korte introductie<textarea name="bio" rows="3" placeholder="Waar ben je trots op?">{{ $portfolio->bio }}</textarea></label>
                             <div class="full"><button class="button" type="submit">Wijzigingen opslaan</button></div>
                         </form>
-                        @if(!$portfolioLocked && !$submitOnly && !$portfolio->evidence->contains('status', 'akkoord'))
-                            <form method="POST" action="{{ route('portfolio.destroy', $portfolio) }}" class="mt-4" onsubmit="return confirm('Weet je zeker dat je je portfolio en alle bewijsstukken wilt verwijderen?')">@csrf @method('DELETE')<button class="evidence-delete-button" type="submit"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6" /></svg>Portfolio verwijderen</button></form>
-                        @endif
                     @else
                         <!-- Portfolio Invulformulier -->
                         @if(!$portfolioLocked)
@@ -137,7 +134,7 @@
                                         </select></label>
                                     <p class="evidence-idea-visibility" x-cloak x-show="evidenceStatus === 'idee'">Je docent kan dit bewijsstuk en je notitie niet zien zolang de status op Idee staat. Kies ‘Ingeleverd’ wanneer je het wilt delen.</p>
                                 </div>
-                                <label class="plan-note">Notitie / idee<textarea name="note" rows="2" placeholder="Schrijf hier je idee of notitie..." @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')>{{ $item->note }}</textarea></label><label class="submitted-where">Waar ingeleverd? <span>(niet verplicht)</span><input name="submitted_where" value="{{ $item->submitted_where }}" placeholder="Teams, Canvas of SharePoint" @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')></label>
+                                <label class="plan-note">Notitie / idee<textarea name="note" rows="2" placeholder="Schrijf hier je idee of notitie..." @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')>{{ $item->note }}</textarea></label>
                                 <div class="file-edit">
                                     @if($item->status === 'akkoord' || $portfolioLocked || $submitOnly)
                                     <strong>{{ $item->status === 'akkoord' ? 'Bestand vergrendeld na akkoord' : 'Portfolio is vergrendeld voor wijzigingen' }}</strong>
@@ -153,18 +150,24 @@
                                             <div class="saved-file-row">
                                                 <span class="saved-file-name" title="{{ $item->original_file_name ?: basename($item->file_path) }}"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 2.75h8l5 5v13.5H6z"/><path d="M14 2.75v5h5M8.5 15.5l1.6-4 1.6 4m-2.8-1.2h2.4m2.2 1.2v-4h1.2a1.4 1.4 0 0 1 0 2.8h-1.2"/></svg><span>{{ $item->original_file_name ?: basename($item->file_path) }}</span></span>
                                                 <span class="saved-file-size">{{ $savedFileSize !== null ? ($savedFileSize >= 1048576 ? number_format($savedFileSize / 1048576, 0) . ' MB' : number_format($savedFileSize / 1024, 0) . ' KB') : 'Onbekend' }}</span>
-                                                <a class="saved-file-download" href="{{ route('evidence.download', $item) }}"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v4h14v-4"/></svg>Downloaden</a>
+                                                <span class="saved-file-actions">
+                                                    <a class="saved-file-action" href="{{ route('evidence.open', $item) }}" target="_blank" rel="noopener">Inzien</a>
+                                                    <a class="saved-file-action" href="{{ route('evidence.download', $item) }}">Downloaden</a>
+                                                    @if(!$portfolioLocked && !$submitOnly && $item->status !== 'akkoord')<button class="saved-file-action saved-file-remove" type="submit" form="remove-evidence-file-{{ $item->id }}">Bestand verwijderen</button>@endif
+                                                </span>
                                             </div>
                                         </div>
                                     @endif
                                 </div>
                                 @if(!$portfolioLocked && !$submitOnly && $item->status !== 'akkoord')<button class="button small-button" type="submit">Wijzigingen opslaan</button>@endif
                             </form>
+                            @if($item->file_path && $item->status !== 'akkoord' && !$portfolioLocked && !$submitOnly)
+                                <form method="POST" action="{{ route('evidence.file.destroy', $item) }}" id="remove-evidence-file-{{ $item->id }}" class="hidden" data-confirm="Weet u zeker dat u dit bestand wilt verwijderen?">@csrf @method('DELETE')</form>
+                            @endif
                             @if(in_array($item->status, ['akkoord', 'niet akkoord'], true))<p class="teacher-status-line"><strong>Docent status:</strong> {{ ucwords($item->status) }}</p>@endif
                             @if($item->feedback)<aside class="teacher-feedback"><h4>Notitie van {{ $item->feedback_author_name ?: 'beoordelaar' }}</h4><p>{{ $item->feedback }}</p></aside>@endif
                             @if($item->status !== 'akkoord' && !$portfolioLocked && !$submitOnly)
                             <div class="file-actions">
-                                @if($item->file_path)<form method="POST" action="{{ route('evidence.file.destroy', $item) }}" class="delete-idea-form" data-confirm="Weet u zeker dat u dit bestand wilt verwijderen?">@csrf @method('DELETE')<button class="delete-idea" type="submit">Bestand verwijderen</button></form>@endif
                                 <form method="POST" action="{{ route('evidence.destroy', $item) }}" class="delete-idea-form" data-confirm="Weet u zeker dat u dit bewijsstuk en het bijbehorende bestand wilt verwijderen?">@csrf @method('DELETE')<button class="evidence-delete-button" type="submit">Bewijsstuk verwijderen</button></form>
                             </div>
                             @endif

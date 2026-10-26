@@ -593,9 +593,15 @@ select:focus {
 
 .process-panel {
     border: 1px solid var(--accent);
+    width: 100%;
+    margin-left: 0;
+    padding: 1.7rem;
+}
+
+.process-main > .process-panel {
     width: calc(100% + 3.85rem);
     margin-left: -3.85rem;
-    padding: 1.7rem 1.7rem 1.7rem calc(1.7rem + 3.85rem);
+    padding-left: calc(1.7rem + 3.85rem);
 }
 
 .process-panel > .section-title {
@@ -775,7 +781,7 @@ select:focus {
 }
 
 .saved-file-name svg,
-.saved-file-download svg {
+.saved-file-action svg {
     width: 1.3rem;
     height: 1.3rem;
     flex: 0 0 auto;
@@ -791,7 +797,14 @@ select:focus {
     white-space: nowrap;
 }
 
-.saved-file-download {
+.saved-file-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: .4rem;
+}
+
+.saved-file-action {
     display: inline-flex;
     align-items: center;
     gap: .35rem;
@@ -799,12 +812,21 @@ select:focus {
     border: 1px solid #d1d5db;
     border-radius: 5px;
     color: #344054;
+    background: #fff;
+    font: inherit;
+    font-size: .8rem;
     text-decoration: none;
     white-space: nowrap;
+    cursor: pointer;
 }
 
-.saved-file-download:hover {
-    background: #fff;
+.saved-file-action:hover {
+    background: #f8fafc;
+}
+
+.saved-file-remove {
+    border-color: #f0a29d;
+    color: #b42318;
 }
 
 .file-actions {
@@ -1981,6 +2003,12 @@ select:focus {
         padding: 1.25rem;
     }
 
+    .process-main > .process-panel {
+        width: 100%;
+        margin-left: 0;
+        padding-left: 1.25rem;
+    }
+
     .kerntaak-tabs {
         flex-direction: row;
         padding-top: 0;
@@ -2016,9 +2044,9 @@ select:focus {
         gap: .4rem;
     }
 
-    .saved-file-download {
+    .saved-file-actions {
         grid-column: 1 / -1;
-        justify-self: end;
+        justify-content: flex-start;
     }
 }
 
@@ -2440,7 +2468,7 @@ select:focus {
     border-right: 16px solid transparent;
     transform: rotate(10deg);
 }
-.teacher-feedback h4 { margin: 0 0 .4rem; color: #fff; font-size: .85rem; font-weight: 600; }
+.teacher-feedback h4 { margin: 0 0 .4rem; color: #fff; font-family: 'Space Grotesk', sans-serif; font-size: .9rem; font-style: italic; font-weight: 700; letter-spacing: .02em; }
 .teacher-feedback p { margin: 0; color: #fff; font-size: .95rem; line-height: 1.5; white-space: pre-wrap; }
 .process-group > .file-actions { margin: .75rem 0 1.25rem 51px; align-items: center; }
 .process-group > .delete-idea-form { margin: .75rem 0 1.25rem 51px; }

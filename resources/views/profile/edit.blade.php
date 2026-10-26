@@ -15,6 +15,7 @@
                             @if($user->reviewers->isEmpty())
                                 <div><dt>Beoordelaars:</dt><dd>Nog niet gekoppeld</dd></div>
                             @endif
+                            <div><dt>Groep:</dt><dd>{{ $user->groups->pluck('name')->join(', ') ?: 'Nog niet gekoppeld' }}</dd></div>
                             <div><dt>Opleidingstype:</dt><dd>{{ $user->study_type === 'Flex' ? 'FLEX' : ($user->study_type ?: 'Niet ingevuld') }}</dd></div>
                             <div><dt>Studentnummer:</dt><dd>{{ $user->student_number ?: 'Niet ingevuld' }}</dd></div>
                         </dl>

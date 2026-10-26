@@ -53,6 +53,13 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        $user = Auth::user();
+        $email = mb_strtolower((string) $user?->email);
+        if ($user && ! $user->student_number && preg_match('/^(\d+)@st\.deltion\.nl$/', $email, $matches)
+            && ! $user->newQuery()->where('student_number', $matches[1])->exists()) {
+            $user->forceFill(['student_number' => $matches[1]])->save();
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 
