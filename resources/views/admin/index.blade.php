@@ -71,7 +71,7 @@
         <section class="panel" style="border: 1px solid var(--accent);" x-show="section === 'teachers'" x-cloak>
             <div class="section-title"><div><p class="eyebrow">DOCENTEN</p><h2>Docentenlijst</h2></div><span class="count">{{ $teachers->count() }} docenten</span></div>
             <div class="overflow-x-auto"><table class="w-full text-left"><thead><tr><th class="p-3">Naam</th><th class="p-3">E-mail</th><th class="p-3">Groepen</th></tr></thead><tbody>
-                @forelse($teachers as $teacher)<tr class="border-t"><td class="p-3"><a class="underline" href="{{ route('admin.teachers.show', $teacher) }}">{{ $teacher->name }}</a></td><td class="p-3">{{ $teacher->email }}</td><td class="p-3">{{ $teacher->teaching_groups_count }}</td></tr>
+                @forelse($teachers as $teacher)<tr class="border-t"><td class="p-3"><a class="teacher-link" href="{{ route('admin.teachers.show', $teacher) }}">{{ $teacher->name }}</a></td><td class="p-3">{{ $teacher->email }}</td><td class="p-3">{{ $teacher->teaching_groups_count }}</td></tr>
                 @empty<tr><td class="p-3" colspan="3">Er zijn nog geen docenten.</td></tr>@endforelse
             </tbody></table></div>
         </section>

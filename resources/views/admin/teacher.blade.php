@@ -1,6 +1,6 @@
 <x-app-layout headerTitle="Docentgegevens">
     <div class="portal-shell space-y-6">
-        <a href="{{ route('admin.dashboard', ['section' => 'teachers']) }}" class="underline">← Terug naar docentenlijst</a>
+        <a href="{{ route('admin.dashboard', ['section' => 'teachers']) }}" class="teacher-link back-button">← Terug naar docentenlijst</a>
         <section class="panel student-details-panel" style="border: 1px solid var(--accent);">
             <div class="section-title"><div><p class="eyebrow">DOCENTGEGEVENS</p><h2>{{ $teacher->name }}</h2></div></div>
             <div class="student-detail-grid">
