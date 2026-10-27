@@ -1,6 +1,6 @@
 <x-app-layout headerTitle="Groep {{ $group->name }}">
     <div class="portal-shell space-y-6">
-        <a href="{{ route('admin.dashboard') }}" class="teacher-link back-button">← Terug naar admin dashboard</a>
+        <a href="{{ route('admin.dashboard') }}" class="teacher-link back-button">← Terug naar instellingen</a>
         @if ($errors->any())<div class="panel text-red-700">{{ $errors->first() }}</div>@endif
 
         <section class="panel">

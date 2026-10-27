@@ -58,8 +58,10 @@ class AdminController extends Controller
         $data = $request->validate(['name' => ['required', 'string', 'max:120'], 'teacher_id' => ['nullable', 'exists:users,id']]);
         if (!empty($data['teacher_id'])) abort_unless(User::whereKey($data['teacher_id'])->where('role', 'teacher')->exists(), 422);
         $group = Group::create($data);
-        foreach (['Afstemmen en plannen', 'Ontwerpen', 'Realisatie', 'Testen', 'Verbetervoorstellen', 'Projectteam', 'Presenteren', 'Evalueer'] as $index => $name) {
-            $group->workProcesses()->create(['number' => $index + 1, 'name' => $name]);
+        $program = \App\Models\EducationProgram::where('name', 'Software Developer')->firstOrFail();
+        $group->update(['education_program_id' => $program->id]);
+        foreach ($program->workProcesses as $process) {
+            $group->workProcesses()->create(['number' => $process->number, 'name' => $process->name]);
         }
         return back()->with('status', 'Groep aangemaakt.');
     }

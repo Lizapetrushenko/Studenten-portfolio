@@ -1,17 +1,18 @@
-<x-app-layout headerTitle="Admin panel">
+<x-app-layout headerTitle="Instellingen">
     <div class="portal-shell space-y-6" x-data="{ section: ['dashboard', 'teachers', 'students', 'groups'].includes(new URLSearchParams(window.location.search).get('section')) ? new URLSearchParams(window.location.search).get('section') : 'dashboard' }" x-init="$watch('section', value => { const url = new URL(window.location.href); if (value === 'dashboard') url.searchParams.delete('section'); else url.searchParams.set('section', value); window.history.replaceState({}, '', url); })">
         @if ($errors->any())<div class="panel text-red-700">{{ $errors->first() }}</div>@endif
 
         <section class="panel admin-dashboard-panel" style="border: 1px solid var(--accent);" x-show="section === 'dashboard'">
-            <div class="section-title"><div><p class="eyebrow">BEHEER</p><h2>Admin dashboard</h2></div></div>
+            <div class="section-title"><div><p class="eyebrow">BEHEER</p><h2>Instellingen</h2></div></div>
             <div class="screen-grid">
+                <a class="screen-card text-left" href="{{ route('admin.settings') }}"><span class="tag">KD / OPLEIDING</span><h2>Opleidingen en werkprocessen</h2><p>Stel het kwalificatiedossier en de werkprocessen per opleiding in.</p><strong>Instellen →</strong></a>
                 <button type="button" class="screen-card text-left" @click="section = 'teachers'"><span class="tag">{{ $teachers->count() }} accounts</span><h2>Docenten</h2><p>Docenten toevoegen en beheren.</p><strong>Openen →</strong></button>
                 <button type="button" class="screen-card text-left" @click="section = 'students'"><span class="tag">{{ $students->count() }} accounts</span><h2>Studenten</h2><p>Studentgegevens inzien, groepen beheren en accounts verwijderen.</p><strong>Openen →</strong></button>
                 <button type="button" class="screen-card text-left" @click="section = 'groups'"><span class="tag">{{ $groups->count() }} groepen</span><h2>Groepen</h2><p>De vaste statusgroepen en alle andere groepen bekijken.</p><strong>Openen →</strong></button>
             </div>
         </section>
         <nav class="flex flex-wrap gap-2" aria-label="Admin schermen" x-show="section !== 'dashboard'">
-            <button class="teacher-link back-button" type="button" @click="section = 'dashboard'">← Dashboard</button>
+            <button class="teacher-link back-button" type="button" @click="section = 'dashboard'">← Instellingen</button>
             <button class="button tiny-button" type="button" @click="section = 'teachers'">Docenten</button>
             <button class="button tiny-button" type="button" @click="section = 'students'">Studenten</button>
             <button class="button tiny-button" type="button" @click="section = 'groups'">Groepen</button>

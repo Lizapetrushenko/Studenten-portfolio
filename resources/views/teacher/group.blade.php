@@ -1,7 +1,7 @@
 <x-app-layout headerTitle="Groep {{ $group->name }}">
     <div class="portal-shell space-y-6">
         <nav class="teacher-page-nav" aria-label="Groepsnavigatie"><a href="{{ route('teacher.dashboard') }}" class="teacher-link back-button">← Terug naar mijn groepen</a>
-        @if(!$group->lifecycle_status)<a href="{{ route('teacher.groups.settings', $group) }}" class="button inline-flex">Instellingen werkprocessen</a>@endif <a href="{{ route('teacher.groups.progress', $group) }}" class="button inline-flex">Voortgangsoverzicht</a></nav>
+        <a href="{{ route('teacher.groups.progress', $group) }}" class="button inline-flex">Voortgangsoverzicht</a></nav>
         @if (session('status'))<div class="panel" role="status">{{ session('status') }}</div>@endif
         @if ($errors->any())<div class="panel text-red-700">{{ $errors->first() }}</div>@endif
         <section class="panel">

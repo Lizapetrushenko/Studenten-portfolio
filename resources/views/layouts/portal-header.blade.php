@@ -40,7 +40,7 @@
                             </x-dropdown-link>
                             <x-mfa-menu />
 
-                            @if(Auth::user()->portfolios()->exists())
+                            @if(!Auth::user()->canOnlySubmitEvidence() && !Auth::user()->portfolioIsLocked() && Auth::user()->portfolios()->exists())
                                 <form method="POST" action="{{ route('portfolio.destroy', Auth::user()->portfolios()->first()) }}" id="deletePortfolioFormHeader">
                                     @csrf
                                     @method('DELETE')
@@ -68,6 +68,7 @@
         </div>
     </div>
 
+    @if(!Auth::user()->canOnlySubmitEvidence() && !Auth::user()->portfolioIsLocked())
     <!-- Delete Portfolio Confirmation Modal -->
     <div x-cloak x-show="showDeleteModal" style="display: none;"
          @keydown.escape="showDeleteModal = false"
@@ -127,4 +128,5 @@
             </div>
         </div>
     </div>
+    @endif
 </header>

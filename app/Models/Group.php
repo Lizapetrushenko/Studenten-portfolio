@@ -10,7 +10,7 @@ use Illuminate\Validation\ValidationException;
 
 class Group extends Model
 {
-    protected $fillable = ['name', 'teacher_id', 'photo_path'];
+    protected $fillable = ['name', 'teacher_id', 'photo_path', 'education_program_id'];
 
     protected static function booted(): void
     {
@@ -20,6 +20,8 @@ class Group extends Model
             }
         });
     }
+
+    public function educationProgram(): BelongsTo { return $this->belongsTo(EducationProgram::class); }
 
     public function teacher(): BelongsTo { return $this->belongsTo(User::class, 'teacher_id'); }
     public function students(): BelongsToMany { return $this->belongsToMany(User::class)->withTimestamps(); }

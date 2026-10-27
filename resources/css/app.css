@@ -2524,3 +2524,9 @@ select:focus {
     .auth-actions { flex-wrap: wrap; }
 }
 .register-link.auth-secondary-action { width: auto; max-width: 100%; }
+
+.deltion-button.blue:not(:disabled):is(:hover, :focus-visible) {
+    background: #f1841c;
+    border-color: #f1841c;
+    color: #fff;
+}
