@@ -27,7 +27,7 @@
                             <div class="full"><button class="button" type="submit">Wijzigingen opslaan</button></div>
                         </form>
                         @if(!$portfolioLocked && !$submitOnly && !$portfolio->evidence->contains('status', 'akkoord'))
-                            <form method="POST" action="{{ route('portfolio.destroy', $portfolio) }}" class="mt-4" onsubmit="return confirm('Weet je zeker dat je je portfolio en alle bewijsstukken wilt verwijderen?')">@csrf @method('DELETE')<button class="evidence-delete-button" type="submit"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6" /></svg>Portfolio verwijderen</button></form>
+                            
                         @endif
                     @else
                         <!-- Portfolio Invulformulier -->
