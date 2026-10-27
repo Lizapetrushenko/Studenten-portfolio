@@ -137,7 +137,7 @@
                                         </select></label>
                                     <p class="evidence-idea-visibility" x-cloak x-show="evidenceStatus === 'idee'">Je docent kan dit bewijsstuk en je notitie niet zien zolang de status op Idee staat. Kies ‘Ingeleverd’ wanneer je het wilt delen.</p>
                                 </div>
-                                <label class="plan-note">Notitie / idee<textarea name="note" rows="2" placeholder="Schrijf hier je idee of notitie..." @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')>{{ $item->note }}</textarea></label><label class="submitted-where">Waar ingeleverd? <span>(niet verplicht)</span><input name="submitted_where" value="{{ $item->submitted_where }}" placeholder="Teams, Canvas of SharePoint" @disabled($portfolioLocked || $submitOnly || $item->status === 'akkoord')></label>
+                                
                                 <div class="file-edit">
                                     @if($item->status === 'akkoord' || $portfolioLocked || $submitOnly)
                                     <strong>{{ $item->status === 'akkoord' ? 'Bestand vergrendeld na akkoord' : 'Portfolio is vergrendeld voor wijzigingen' }}</strong>

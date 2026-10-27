@@ -84,15 +84,14 @@
                     <label>Filter op groep<select x-model="group"><option value="">Alle groepen</option>@foreach($groups as $group)<option value="{{ $group->id }}">{{ $group->name }}</option>@endforeach</select></label>
                     <label>Filter op beoordelaar<select x-model="reviewer"><option value="">Alle beoordelaars</option>@foreach($teachers as $teacher)<option value="{{ $teacher->id }}">{{ $teacher->name }}</option>@endforeach</select></label>
                 </div>
-                <div class="overflow-x-auto"><table class="student-list-table"><thead><tr><th>Naam</th><th>Groepen</th><th>Beoordelaars</th><th>Beheer</th></tr></thead><tbody>
+                <div class="overflow-x-auto"><table class="student-list-table"><thead><tr><th>Naam</th><th>Groepen</th><th>Beoordelaars</th></tr></thead><tbody>
                     @forelse($students as $student)
                         <tr x-show="(!search || @js(mb_strtolower($student->displayName().' '.$student->email.' '.$student->student_number)).includes(search.toLocaleLowerCase())) && (!group || @js($student->groups->pluck('id')->map(fn ($id) => (string) $id)->all()).includes(group)) && (!reviewer || @js($student->reviewers->pluck('id')->map(fn ($id) => (string) $id)->all()).includes(reviewer))">
                             <td><strong><a class="teacher-link" href="{{ route('admin.students.show', $student) }}">{{ $student->displayName() }}</a></strong><small>{{ $student->email }} · {{ $student->student_number ?: 'Geen studentnummer' }} · {{ $student->study_type ?: 'Geen opleidingstype' }}</small></td>
                             <td>{{ $student->groups->pluck('name')->join(', ') ?: 'Nog geen groep' }}</td>
                             <td>{{ $student->reviewers->pluck('name')->join(', ') ?: 'Nog niet gekoppeld' }}</td>
-                            <td><details><summary class="cursor-pointer">Groepen wijzigen</summary><form method="POST" action="{{ route('admin.students.group', $student) }}" class="mt-3 space-y-2">@csrf @method('PATCH')<select name="group_ids[]" aria-label="Groepen voor {{ $student->name }}" multiple size="4" class="min-w-40">@foreach($groups as $group)<option value="{{ $group->id }}" @selected($student->groups->contains('id', $group->id))>{{ $group->name }}</option>@endforeach</select><button class="button tiny-button">Opslaan</button></form></details></td>
                         </tr>
-                    @empty<tr><td colspan="4">Er zijn nog geen studenten.</td></tr>@endforelse
+                    @empty<tr><td colspan="3">Er zijn nog geen studenten.</td></tr>@endforelse
                 </tbody></table></div>
                 <p class="mt-4" x-show="(search || group || reviewer) && ![...$el.parentElement.querySelectorAll('tbody tr')].some(row => row.style.display !== 'none')" x-cloak>Geen studenten gevonden met deze filters.</p>
             </div>
