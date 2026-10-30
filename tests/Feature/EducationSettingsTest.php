@@ -15,7 +15,12 @@ class EducationSettingsTest extends TestCase
         $program = EducationProgram::where('name', 'Software Developer')->firstOrFail();
         $this->assertCount(8, $program->workProcesses);
         $this->actingAs(User::factory()->create(['role' => 'admin', 'mfa_enabled' => true]))
-            ->get(route('admin.settings'))->assertOk()->assertSee('KD en opleiding instellen')->assertSee('Software Developer')->assertSee('K1W1')->assertSee('K2W3');
+            ->get(route('admin.settings'))->assertOk()->assertSee('Opleidingenlijst')->assertSee('Software Developer')
+            ->assertSeeInOrder(['ID', 'KD-nummer', 'Naam opleiding'])->assertDontSee('Nieuw werkproces');
+        $this->get(route('admin.settings', ['tab' => 'werkprocessen', 'program' => $program->id]))
+            ->assertOk()->assertSee('K1W1')->assertSee('K2W3')->assertSee('Naam werkproces')->assertSee('process-'.$program->workProcesses->first()->id);
+        $this->get(route('admin.settings', ['tab' => 'kerntaken', 'program' => $program->id]))
+            ->assertOk()->assertSee('Kerntakenlijst')->assertSeeInOrder(['ID', 'Kerntaak', 'KD_ID', 'KT 1', 'KT 2'])->assertDontSee('Nieuw werkproces');
         $this->get(route('admin.dashboard'))->assertOk()->assertSee('Opleidingen en werkprocessen')->assertDontSee('Admin dashboard');
     }
 
