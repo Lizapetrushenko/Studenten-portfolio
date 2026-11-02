@@ -4,16 +4,6 @@
     <form method="POST" action="{{ route('password.store') }}" class="auth-form">
         @csrf
 
-        <!-- Password Reset Token -->
-        <input type="hidden" name="token" value="{{ $request->route('token') }}">
-
-        <!-- Email Address -->
-        <div class="auth-field">
-            <x-input-label for="email" value="E-mailadres" />
-            <x-text-input id="email" class="auth-input" type="email" name="email" :value="old('email', $request->email)" required readonly autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="auth-error" />
-        </div>
-
         <!-- Password -->
         <div class="auth-field">
             <x-input-label for="password" value="Nieuw wachtwoord" />
