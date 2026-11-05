@@ -19,8 +19,44 @@
         <section class="panel">
             <div class="section-title"><div><p class="eyebrow">BEHEER</p><h2>Groepen, beoordelaars en leerweg</h2></div></div>
             <form method="POST" action="{{ route('teacher.students.update', $student) }}" class="form-grid">@csrf @method('PATCH')
-                <fieldset class="full"><legend class="font-semibold mb-2">Statusgroep</legend><div class="grid gap-2 sm:grid-cols-2">@foreach($lifecycleGroups as $group)<label class="flex items-center gap-2"><input type="radio" name="lifecycle_group_id" value="{{ $group->id }}" @checked($student->groups->contains('id', $group->id)) required>{{ $group->name }}</label>@endforeach</div></fieldset>
-                <fieldset class="full"><legend class="font-semibold mb-2">Mijn groepen</legend><div class="grid gap-2 sm:grid-cols-2">@forelse($teacherGroups as $group)<label class="flex items-center gap-2"><input type="checkbox" name="group_ids[]" value="{{ $group->id }}" @checked($student->groups->contains('id', $group->id))>{{ $group->name }}</label>@empty<p>Je hebt nog geen gewone groepen om aan deze student te koppelen.</p>@endforelse</div><p class="mt-2 text-sm text-gray-500">Een student kan lid zijn van meerdere groepen.</p></fieldset>
+                @php
+                    $selectedGroupIds = collect(old('group_ids', $student->groups->modelKeys()))->map(fn ($id) => (string) $id)->values();
+                @endphp
+                <fieldset class="full">
+                    <legend class="font-semibold mb-2">Groepen</legend>
+                    @if($groups->isNotEmpty())
+                        <div class="student-group-select" x-data="{ open: false, selected: @js($selectedGroupIds) }" @click.outside="open = false" @keydown.escape="open = false">
+                            <div class="group-multiselect">
+                                <div class="group-multiselect-value" role="group" aria-label="Geselecteerde groepen">
+                                    <div class="group-multiselect-chips">
+                                        @foreach($groups as $group)
+                                            <span class="group-multiselect-chip" x-cloak x-show="selected.includes('{{ $group->id }}')">
+                                                {{ $group->name }}
+                                                <button type="button" aria-label="{{ $group->name }} verwijderen" @click="selected = selected.filter(id => id !== '{{ $group->id }}')">×</button>
+                                            </span>
+                                        @endforeach
+                                        <span class="group-multiselect-placeholder" x-cloak x-show="selected.length === 0">Kies groepen</span>
+                                    </div>
+                                    <button type="button" class="group-multiselect-toggle" aria-label="Groepen selecteren" :aria-expanded="open.toString()" @click="open = !open">
+                                        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :style="{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }"><path d="m6 9 6 6 6-6" /></svg>
+                                    </button>
+                                </div>
+                                <div class="group-multiselect-menu" x-cloak x-show="open" x-transition.opacity>
+                                    @foreach($groups as $group)
+                                        <label class="group-multiselect-option" :class="selected.includes('{{ $group->id }}') ? 'is-selected' : ''">
+                                            <input type="checkbox" name="group_ids[]" value="{{ $group->id }}" x-model="selected" @checked($student->groups->contains('id', $group->id))>
+                                            <span>{{ $group->name }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <p>Er zijn geen groepen beschikbaar om aan deze student te koppelen.</p>
+                    @endif
+                    <p class="mt-2 text-sm text-gray-500">Selecteer precies één statusgroep. Een student kan daarnaast lid zijn van meerdere groepen.</p>
+                    <x-input-error :messages="$errors->get('group_ids')" />
+                </fieldset>
                 @php
                     $reviewerOptions = $teachers->map(fn ($teacher) => ['id' => (string) $teacher->id, 'name' => $teacher->name])->values()->all();
                     $selectedReviewerIds = collect(old('reviewer_ids', $student->reviewers->modelKeys()))->map(fn ($id) => (string) $id)->values()->all();

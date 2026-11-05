@@ -4,16 +4,19 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, MustVerifyEmailTrait, Notifiable;
 
     protected static function booted(): void
     {
@@ -53,17 +56,17 @@ class User extends Authenticatable
         return $this->belongsTo(Group::class);
     }
 
-    public function groups(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function groups(): BelongsToMany
     {
         return $this->belongsToMany(Group::class)->withTimestamps();
     }
 
-    public function reviewers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function reviewers(): BelongsToMany
     {
         return $this->belongsToMany(self::class, 'student_reviewer', 'student_id', 'teacher_id')->withTimestamps();
     }
 
-    public function reviewedStudents(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function reviewedStudents(): BelongsToMany
     {
         return $this->belongsToMany(self::class, 'student_reviewer', 'teacher_id', 'student_id')->withTimestamps();
     }
@@ -97,6 +100,7 @@ class User extends Authenticatable
         }
 
         $first = $this->preferred_name ?: ($this->first_name ?: $this->name);
+
         return trim($first.' '.($this->last_name ?? ''));
     }
 
@@ -105,9 +109,20 @@ class User extends Authenticatable
         return $this->hasMany(Group::class, 'teacher_id');
     }
 
-    public function isAdmin(): bool { return $this->role === 'admin'; }
-    public function isTeacher(): bool { return $this->role === 'teacher'; }
-    public function isStudent(): bool { return $this->role === 'student'; }
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isTeacher(): bool
+    {
+        return $this->role === 'teacher';
+    }
+
+    public function isStudent(): bool
+    {
+        return $this->role === 'student';
+    }
 
     /**
      * The attributes that are mass assignable.

@@ -45,6 +45,7 @@ class MfaTest extends TestCase
     {
         $this->post(route('mfa.disable'))->assertRedirect(route('login'));
     }
+
     public function test_logged_in_user_can_open_the_code_form(): void
     {
         $this->actingAs(User::factory()->create())
@@ -99,5 +100,42 @@ class MfaTest extends TestCase
 
         $this->assertFalse($user->fresh()->mfa_enabled);
         $this->assertNull($user->fresh()->mfa_secret);
+    }
+
+    public function test_mfa_challenge_requires_a_pending_user_and_valid_code_logs_them_in(): void
+    {
+        $this->get(route('mfa.challenge'))->assertRedirect(route('login'));
+
+        $google2fa = app(Google2FA::class);
+        $secret = $google2fa->generateSecretKey();
+        $user = User::factory()->create([
+            'mfa_enabled' => true, 'mfa_secret' => Crypt::encrypt($secret),
+        ]);
+
+        $this->withSession(['mfa_user_id' => $user->id])
+            ->get(route('mfa.challenge'))
+            ->assertOk()
+            ->assertSee('name="code"', false);
+
+        $this->post(route('mfa.verify'), ['code' => $google2fa->getCurrentOtp($secret)])
+            ->assertRedirect('/dashboard');
+        $this->assertAuthenticatedAs($user);
+        $this->assertFalse(session()->has('mfa_user_id'));
+    }
+
+    public function test_invalid_mfa_challenge_code_does_not_authenticate_user(): void
+    {
+        $secret = app(Google2FA::class)->generateSecretKey();
+        $user = User::factory()->create([
+            'mfa_enabled' => true, 'mfa_secret' => Crypt::encrypt($secret),
+        ]);
+
+        $this->withSession(['mfa_user_id' => $user->id])
+            ->from(route('mfa.challenge'))
+            ->post(route('mfa.verify'), ['code' => '000000'])
+            ->assertRedirect(route('mfa.challenge'))
+            ->assertSessionHasErrors('code');
+
+        $this->assertGuest();
     }
 }

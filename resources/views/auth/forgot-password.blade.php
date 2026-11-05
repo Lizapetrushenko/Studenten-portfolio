@@ -20,7 +20,7 @@
 
         <div class="flex items-center justify-end mt-4">
             <x-primary-button>
-                Verder naar nieuw wachtwoord
+        Code e-mailen
             </x-primary-button>
         </div>
     </form>

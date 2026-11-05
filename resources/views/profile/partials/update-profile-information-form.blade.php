@@ -5,7 +5,7 @@
         @endunless
 
         <p class="mt-1 text-sm text-gray-600">
-            Werk je profielgegevens en e-mailadres bij.
+            Werk je profielgegevens bij. Je e-mailadres kan niet worden gewijzigd.
         </p>
     </header>
 
@@ -13,7 +13,7 @@
         @csrf
     </form>
 
-    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6" x-data="{ currentEmail: @js(mb_strtolower($user->email)), emailConfirmationOpen: false, emailChangeApproved: false, confirmEmailChange(event) { if (this.emailChangeApproved) return; const nextEmail = this.$refs.emailInput.value.trim().toLocaleLowerCase(); if (nextEmail !== this.currentEmail) { event.preventDefault(); this.emailConfirmationOpen = true; } }, approveEmailChange() { this.emailChangeApproved = true; this.emailConfirmationOpen = false; this.$refs.profileForm.requestSubmit(); } }" x-ref="profileForm" @submit="confirmEmailChange($event)" @keydown.escape.window="emailConfirmationOpen = false">
+    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6">
         @csrf
         @method('patch')
 
@@ -26,9 +26,8 @@
         @endif
 
         <div>
-            <x-input-label for="email" value="E-mailadres" />
-            <x-text-input id="email" name="email" type="email" x-ref="emailInput" class="mt-1 block w-full" :value="old('email', $user->email)" required autocomplete="username" />
-            <x-input-error class="mt-2" :messages="$errors->get('email')" />
+            <x-input-label value="E-mailadres" />
+            <p class="mt-1 text-sm text-gray-600">{{ $user->email }}</p>
 
             @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
                 <div>
@@ -48,15 +47,5 @@
             <x-primary-button>Opslaan</x-primary-button>
         </div>
 
-        <div x-cloak x-show="emailConfirmationOpen" x-transition.opacity class="email-confirmation-backdrop" @click.self="emailConfirmationOpen = false">
-            <section class="email-confirmation-dialog" role="dialog" aria-modal="true" aria-labelledby="email-confirmation-title">
-                <h3 id="email-confirmation-title">E-mailadres wijzigen?</h3>
-                <p>Weet je zeker dat je je e-mailadres wilt wijzigen?</p>
-                <div class="email-confirmation-actions">
-                    <button type="button" class="button secondary-button" @click="emailConfirmationOpen = false">Annuleren</button>
-                    <button type="button" class="button" @click="approveEmailChange">Ja, wijzigen</button>
-                </div>
-            </section>
-        </div>
     </form>
 </section>
