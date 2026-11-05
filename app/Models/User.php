@@ -21,7 +21,7 @@ class User extends Authenticatable implements MustVerifyEmail
     protected static function booted(): void
     {
         static::saving(function (User $user) {
-            $user->education = ($user->role ?? 'student') === 'student' ? 'Software Developer' : null;
+            $user->education = ($user->role ?? 'student') === 'student' ? ($user->education ?: 'Software Developer') : null;
         });
 
         static::creating(function (User $user) {
@@ -84,6 +84,13 @@ class User extends Authenticatable implements MustVerifyEmail
     public function canOnlySubmitEvidence(): bool
     {
         return $this->hasLifecycleGroup('herkansen');
+    }
+
+    public function getEducationAttribute($value): ?string
+    {
+        if (!$this->isStudent()) return null;
+        return $this->groups()->whereNull('lifecycle_status')->with('educationProgram')->get()
+            ->first(fn ($group) => $group->educationProgram !== null)?->educationProgram?->name ?? $value ?? 'Software Developer';
     }
 
     public function displayName(): string

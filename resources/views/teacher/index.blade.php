@@ -14,10 +14,6 @@
                 <span class="tag">{{ $studentCount }} studenten</span><h2>Studenten</h2>
                 <p>Bekijk de studenten en open hun profiel of portfolio.</p><strong>Studenten bekijken →</strong>
             </a>
-            <a class="screen-card" href="{{ route('teacher.work-processes.index') }}">
-                <span class="tag">{{ $workProcessCount }} werkprocessen</span><h2>Werkprocessen</h2>
-                <p>Beheer per groep de werkprocessen die studenten in hun portfolio zien.</p><strong>Werkprocessen beheren →</strong>
-            </a>
         </section>
     </div>
 </x-app-layout>

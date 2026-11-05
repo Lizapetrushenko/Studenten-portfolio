@@ -35,10 +35,10 @@ class MergedPagesTest extends TestCase
         $student = User::factory()->create(['role' => 'student', 'leerweg' => 'BBL']);
         $student->groups()->attach($group);
         $student->portfolios()->create(['title' => 'Portfolio', 'study' => 'BBL']);
-        foreach (['teacher.dashboard', 'teacher.groups.index', 'teacher.students.index', 'teacher.work-processes.index'] as $name) {
+        foreach (['teacher.dashboard', 'teacher.groups.index', 'teacher.students.index'] as $name) {
             $this->actingAs($teacher)->get(route($name))->assertOk();
         }
-        foreach (['teacher.groups.show', 'teacher.groups.settings', 'teacher.groups.progress'] as $name) {
+        foreach (['teacher.groups.show', 'teacher.groups.progress'] as $name) {
             $response = $this->get(route($name, $group))->assertOk();
             if ($name === 'teacher.groups.show') $this->assertFormsNotNested($response->getContent());
         }

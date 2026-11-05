@@ -1,17 +1,18 @@
-<x-app-layout headerTitle="Admin panel">
+<x-app-layout headerTitle="Instellingen">
     <div class="portal-shell space-y-6" x-data="{ section: ['dashboard', 'teachers', 'students', 'groups'].includes(new URLSearchParams(window.location.search).get('section')) ? new URLSearchParams(window.location.search).get('section') : 'dashboard' }" x-init="$watch('section', value => { const url = new URL(window.location.href); if (value === 'dashboard') url.searchParams.delete('section'); else url.searchParams.set('section', value); window.history.replaceState({}, '', url); })">
         @if ($errors->any())<div class="panel text-red-700">{{ $errors->first() }}</div>@endif
 
         <section class="panel admin-dashboard-panel" style="border: 1px solid var(--accent);" x-show="section === 'dashboard'">
-            <div class="section-title"><div><p class="eyebrow">BEHEER</p><h2>Admin dashboard</h2></div></div>
+            <div class="section-title"><div><p class="eyebrow">BEHEER</p><h2>Instellingen</h2></div></div>
             <div class="screen-grid">
+                <a class="screen-card text-left" href="{{ route('admin.settings') }}"><span class="tag">KD / OPLEIDING</span><h2>Opleidingen en werkprocessen</h2><p>Stel het kwalificatiedossier en de werkprocessen per opleiding in.</p><strong>Instellen →</strong></a>
                 <button type="button" class="screen-card text-left" @click="section = 'teachers'"><span class="tag">{{ $teachers->count() }} accounts</span><h2>Docenten</h2><p>Docenten toevoegen en beheren.</p><strong>Openen →</strong></button>
                 <button type="button" class="screen-card text-left" @click="section = 'students'"><span class="tag">{{ $students->count() }} accounts</span><h2>Studenten</h2><p>Studentgegevens inzien, groepen beheren en accounts verwijderen.</p><strong>Openen →</strong></button>
                 <button type="button" class="screen-card text-left" @click="section = 'groups'"><span class="tag">{{ $groups->count() }} groepen</span><h2>Groepen</h2><p>De vaste statusgroepen en alle andere groepen bekijken.</p><strong>Openen →</strong></button>
             </div>
         </section>
         <nav class="flex flex-wrap gap-2" aria-label="Admin schermen" x-show="section !== 'dashboard'">
-            <button class="teacher-link back-button" type="button" @click="section = 'dashboard'">← Dashboard</button>
+            <button class="teacher-link back-button" type="button" @click="section = 'dashboard'">← Instellingen</button>
             <button class="button tiny-button" type="button" @click="section = 'teachers'">Docenten</button>
             <button class="button tiny-button" type="button" @click="section = 'students'">Studenten</button>
             <button class="button tiny-button" type="button" @click="section = 'groups'">Groepen</button>
@@ -84,15 +85,14 @@
                     <label>Filter op groep<select x-model="group"><option value="">Alle groepen</option>@foreach($groups as $group)<option value="{{ $group->id }}">{{ $group->name }}</option>@endforeach</select></label>
                     <label>Filter op beoordelaar<select x-model="reviewer"><option value="">Alle beoordelaars</option>@foreach($teachers as $teacher)<option value="{{ $teacher->id }}">{{ $teacher->name }}</option>@endforeach</select></label>
                 </div>
-                <div class="overflow-x-auto"><table class="student-list-table"><thead><tr><th>Naam</th><th>Groepen</th><th>Beoordelaars</th><th>Beheer</th></tr></thead><tbody>
+                <div class="overflow-x-auto"><table class="student-list-table"><thead><tr><th>Naam</th><th>Groepen</th><th>Beoordelaars</th></tr></thead><tbody>
                     @forelse($students as $student)
                         <tr x-show="(!search || @js(mb_strtolower($student->displayName().' '.$student->email.' '.$student->student_number)).includes(search.toLocaleLowerCase())) && (!group || @js($student->groups->pluck('id')->map(fn ($id) => (string) $id)->all()).includes(group)) && (!reviewer || @js($student->reviewers->pluck('id')->map(fn ($id) => (string) $id)->all()).includes(reviewer))">
                             <td><strong><a class="teacher-link" href="{{ route('admin.students.show', $student) }}">{{ $student->displayName() }}</a></strong><small>{{ $student->email }} · {{ $student->student_number ?: 'Geen studentnummer' }} · {{ $student->study_type ?: 'Geen opleidingstype' }}</small></td>
                             <td>{{ $student->groups->pluck('name')->join(', ') ?: 'Nog geen groep' }}</td>
                             <td>{{ $student->reviewers->pluck('name')->join(', ') ?: 'Nog niet gekoppeld' }}</td>
-                            <td><details><summary class="cursor-pointer">Groepen wijzigen</summary><form method="POST" action="{{ route('admin.students.group', $student) }}" class="mt-3 space-y-2">@csrf @method('PATCH')<select name="group_ids[]" aria-label="Groepen voor {{ $student->name }}" multiple size="4" class="min-w-40">@foreach($groups as $group)<option value="{{ $group->id }}" @selected($student->groups->contains('id', $group->id))>{{ $group->name }}</option>@endforeach</select><button class="button tiny-button">Opslaan</button></form></details></td>
                         </tr>
-                    @empty<tr><td colspan="4">Er zijn nog geen studenten.</td></tr>@endforelse
+                    @empty<tr><td colspan="3">Er zijn nog geen studenten.</td></tr>@endforelse
                 </tbody></table></div>
                 <p class="mt-4" x-show="(search || group || reviewer) && ![...$el.parentElement.querySelectorAll('tbody tr')].some(row => row.style.display !== 'none')" x-cloak>Geen studenten gevonden met deze filters.</p>
             </div>
