@@ -16,7 +16,7 @@ class EducationSettingsTest extends TestCase
         $this->assertCount(8, $program->workProcesses);
         $this->actingAs(User::factory()->create(['role' => 'admin', 'mfa_enabled' => true]))
             ->get(route('admin.settings'))->assertOk()->assertSee('Opleidingenlijst')->assertSee('Software Developer')
-            ->assertSeeInOrder(['ID', 'KD-nummer', 'Naam opleiding'])->assertDontSee('Nieuw werkproces');
+            ->assertSeeInOrder(['ID', 'Opleidingscode', 'Naam opleiding'])->assertDontSee('Nieuw werkproces');
         $this->get(route('admin.settings', ['tab' => 'werkprocessen', 'program' => $program->id]))
             ->assertOk()->assertSee('K1W1')->assertSee('K2W3')->assertSee('Naam werkproces')->assertSee('process-'.$program->workProcesses->first()->id);
         $this->get(route('admin.settings', ['tab' => 'kerntaken', 'program' => $program->id]))

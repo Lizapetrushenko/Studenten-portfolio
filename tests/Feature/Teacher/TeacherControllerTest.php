@@ -25,21 +25,20 @@ class TeacherControllerTest extends TestCase
         $this->assertCount(8, $group->workProcesses);
     }
 
-    public function test_teacher_can_add_and_edit_work_processes_in_owned_group(): void
+    public function test_teacher_cannot_add_or_edit_work_processes_in_owned_group(): void
     {
         $teacher = User::factory()->create(['role' => 'teacher']);
         $group = $teacher->teachingGroups()->create(['name' => 'Groep A']);
+        $process = $group->workProcesses()->create(['number' => 1, 'name' => 'Plannen']);
 
         $this->actingAs($teacher)->post(route('teacher.groups.work-processes.store', $group), ['name' => 'Nieuw proces'])
-            ->assertRedirect()->assertSessionHasNoErrors();
-        $process = $group->workProcesses()->firstOrFail();
-        $this->assertSame(1, $process->number);
-
+            ->assertForbidden();
         $this->patch(route('teacher.groups.work-processes.update', [$group, $process]), ['name' => 'Aangepast'])
-            ->assertRedirect()->assertSessionHasNoErrors();
-        $this->assertSame('Aangepast', $process->fresh()->name);
-    }
+            ->assertForbidden();
 
+        $this->assertCount(1, $group->workProcesses()->get());
+        $this->assertSame('Plannen', $process->fresh()->name);
+    }
     public function test_teacher_cannot_delete_work_process_with_evidence_or_change_other_group(): void
     {
         $teacher = User::factory()->create(['role' => 'teacher']);
@@ -55,7 +54,7 @@ class TeacherControllerTest extends TestCase
         ]);
 
         $this->actingAs($teacher)->delete(route('teacher.groups.work-processes.destroy', [$group, $process]))
-            ->assertRedirect()->assertSessionHasErrors('work_process');
+            ->assertForbidden();
         $this->actingAs($otherTeacher)->get(route('teacher.groups.show', $group))->assertNotFound();
         $this->patch(route('teacher.groups.update', $group), ['name' => 'Overgenomen'])->assertNotFound();
 
@@ -118,7 +117,7 @@ class TeacherControllerTest extends TestCase
         ])->assertStatus(422);
     }
 
-    public function test_teacher_can_delete_unused_work_process_and_cannot_edit_fixed_groups(): void
+    public function test_teacher_cannot_delete_unused_work_process_or_access_fixed_group_settings(): void
     {
         $teacher = User::factory()->create(['role' => 'teacher']);
         $group = $teacher->teachingGroups()->create(['name' => 'Klas A']);
@@ -126,13 +125,12 @@ class TeacherControllerTest extends TestCase
         $fixedGroup = Group::where('lifecycle_status', 'nieuw')->firstOrFail();
 
         $this->actingAs($teacher)->delete(route('teacher.groups.work-processes.destroy', [$group, $process]))
-            ->assertRedirect()->assertSessionHasNoErrors();
-        $this->delete(route('teacher.groups.work-processes.destroy', [$fixedGroup, $process]))->assertNotFound();
-        $this->get(route('teacher.groups.settings', $fixedGroup))->assertNotFound();
+            ->assertForbidden();
+        $this->delete(route('teacher.groups.work-processes.destroy', [$fixedGroup, $process]))->assertForbidden();
+        $this->get(route('teacher.groups.settings', $fixedGroup))->assertForbidden();
 
-        $this->assertDatabaseMissing('group_work_processes', ['id' => $process->id]);
+        $this->assertDatabaseHas('group_work_processes', ['id' => $process->id]);
     }
-
     public function test_teacher_can_update_group_photo_and_remove_student_only_from_departed_group(): void
     {
         Storage::fake('public');
