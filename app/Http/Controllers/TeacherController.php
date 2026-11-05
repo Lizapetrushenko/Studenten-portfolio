@@ -177,9 +177,8 @@ class TeacherController extends Controller
         abort_unless($student->isStudent(), 404);
         $student->load(['groups', 'reviewers', 'portfolios.evidence']);
         $teachers = User::where('role', 'teacher')->orderBy('name')->get();
-        $teacherGroups = $request->user()->teachingGroups()->orderBy('name')->get();
-        $lifecycleGroups = Group::whereNotNull('lifecycle_status')->orderBy('name')->get();
-        return view('teacher.student-profile', compact('student', 'teachers', 'teacherGroups', 'lifecycleGroups'));
+        $groups = Group::orderBy('name')->get();
+        return view('teacher.student-profile', compact('student', 'teachers', 'groups'));
     }
 
     public function reviewEvidence(Request $request, Evidence $evidence): RedirectResponse
@@ -213,7 +212,6 @@ class TeacherController extends Controller
         $data = $request->validate([
             'group_ids' => ['nullable', 'array'],
             'group_ids.*' => ['integer', 'exists:groups,id'],
-            'lifecycle_group_id' => ['required', 'integer', 'exists:groups,id'],
             'reviewer_ids' => ['required', 'array', 'min:2'],
             'reviewer_ids.*' => ['integer', 'exists:users,id'],
             'study_type' => ['required', 'in:BOL,BBL,Flex'],
@@ -222,18 +220,18 @@ class TeacherController extends Controller
             'reviewer_ids.min' => 'Selecteer minimaal twee beoordelaars.',
             'reviewer_ids.array' => 'Selecteer beoordelaars uit de lijst.',
         ]);
-        $allowedGroups = $request->user()->teachingGroups()->pluck('id')->map(fn ($id) => (int) $id)->all();
-        $selectedGroups = array_map('intval', $data['group_ids'] ?? []);
-        abort_unless(count(array_diff($selectedGroups, $allowedGroups)) === 0, 403);
-        $statusGroup = Group::whereKey($data['lifecycle_group_id'])->whereNotNull('lifecycle_status')->firstOrFail();
+        $selectedGroupIds = array_map('intval', $data['group_ids'] ?? []);
+        $selectedStatusGroups = Group::whereIn('id', $selectedGroupIds)->whereNotNull('lifecycle_status')->get();
+        abort_if($selectedStatusGroups->count() !== 1, 422, 'Selecteer precies één statusgroep.');
+        $statusGroup = $selectedStatusGroups->first();
+        $selectedGroups = array_values(array_diff($selectedGroupIds, $selectedStatusGroups->modelKeys()));
         $reviewerIds = array_unique(array_map('intval', $data['reviewer_ids']));
         abort_if(User::whereIn('id', $reviewerIds)->where('role', '!=', 'teacher')->exists(), 422, 'Beoordelaars moeten docenten zijn.');
         abort_if(count($reviewerIds) < 2, 422, 'Kies minimaal twee beoordelaars.');
 
-        $protectedGroupIds = $student->groups()->whereNull('lifecycle_status')->where(fn ($query) => $query->whereNull('teacher_id')->orWhere('teacher_id', '!=', $request->user()->id))->pluck('groups.id')->all();
-        $student->groups()->sync(array_unique([...$protectedGroupIds, ...$selectedGroups, $statusGroup->id]));
+        $student->groups()->sync(array_unique([...$selectedGroups, $statusGroup->id]));
         $student->reviewers()->sync($reviewerIds);
-        $student->update(['group_id' => $selectedGroups[0] ?? ($protectedGroupIds[0] ?? $statusGroup->id), 'study_type' => $data['study_type'], 'leerweg' => strtoupper($data['study_type'])]);
+        $student->update(['group_id' => $selectedGroups[0] ?? $statusGroup->id, 'study_type' => $data['study_type'], 'leerweg' => strtoupper($data['study_type'])]);
         $student->portfolios()->update(['study' => $data['study_type']]);
         return redirect()->route('teacher.students.show', $student)->with('status', 'Studentgegevens opgeslagen.');
     }
