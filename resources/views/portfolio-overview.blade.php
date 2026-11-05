@@ -26,6 +26,9 @@
                             <label class="full">Korte introductie<textarea name="bio" rows="3" placeholder="Waar ben je trots op?">{{ $portfolio->bio }}</textarea></label>
                             <div class="full"><button class="button" type="submit">Wijzigingen opslaan</button></div>
                         </form>
+                        @if(!$portfolioLocked && !$submitOnly && !$portfolio->evidence->contains('status', 'akkoord'))
+                            
+                        @endif
                     @else
                         <!-- Portfolio Invulformulier -->
                         @if(!$portfolioLocked)

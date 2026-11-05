@@ -1,6 +1,6 @@
 <x-app-layout headerTitle="Studentgegevens">
     <div class="portal-shell space-y-6">
-        <a href="{{ route('admin.dashboard', ['section' => 'students']) }}" class="underline">← Terug naar studentenlijst</a>
+        <a href="{{ route('admin.dashboard', ['section' => 'students']) }}" class="teacher-link back-button">← Terug naar studentenlijst</a>
         <section class="panel student-details-panel" style="border: 1px solid var(--accent);" x-data="{ showDeleteConfirmation: false }" @keydown.escape.window="showDeleteConfirmation = false">
             <div class="section-title"><div><p class="eyebrow">STUDENTGEGEVENS</p><h2>{{ $student->displayName() }}</h2></div></div>
             <div class="student-detail-grid">
