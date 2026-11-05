@@ -20,7 +20,7 @@
             <div class="section-title"><div><p class="eyebrow">OPLEIDINGEN</p><h2>Opleidingenlijst</h2></div><span class="count">{{ $programs->count() }} opleidingen</span></div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
-                    <thead><tr><th scope="col">ID</th><th scope="col">KD-nummer</th><th scope="col">Naam opleiding</th><th scope="col">Acties</th></tr></thead>
+                    <thead><tr><th scope="col">ID</th><th scope="col">Opleidingscode</th><th scope="col">Naam opleiding</th><th scope="col">Acties</th></tr></thead>
                     <tbody>
                         @forelse($programs as $option)
                             <tr>
