@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Group;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -23,14 +24,15 @@ class ProfileTest extends TestCase
 
     public function test_profile_information_can_be_updated(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => 'student']);
+        $originalEmail = $user->email;
 
         $response = $this
             ->actingAs($user)
             ->patch('/profile', [
                 'first_name' => 'Test',
                 'last_name' => 'User',
-                'email' => 'test@example.com',
+                'preferred_name' => 'Tes',
             ]);
 
         $response
@@ -40,8 +42,11 @@ class ProfileTest extends TestCase
         $user->refresh();
 
         $this->assertSame('Test User', $user->name);
-        $this->assertSame('test@example.com', $user->email);
-        $this->assertNull($user->email_verified_at);
+        $this->assertSame('Test', $user->first_name);
+        $this->assertSame('User', $user->last_name);
+        $this->assertSame('Tes', $user->preferred_name);
+        $this->assertSame($originalEmail, $user->email);
+        $this->assertNotNull($user->email_verified_at);
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
@@ -97,5 +102,45 @@ class ProfileTest extends TestCase
             ->assertRedirect('/profile');
 
         $this->assertNotNull($user->fresh());
+    }
+
+    public function test_student_profile_update_validates_required_names_and_length(): void
+    {
+        $user = User::factory()->create(['role' => 'student']);
+
+        $this->actingAs($user)->patch('/profile', [
+            'first_name' => '', 'last_name' => str_repeat('x', 121),
+        ])->assertSessionHasErrors(['first_name', 'last_name']);
+
+        $this->assertSame($user->first_name, $user->fresh()->first_name);
+    }
+
+    public function test_admin_cannot_delete_their_account_through_profile(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)->delete('/profile', ['password' => 'password'])
+            ->assertSessionHasErrorsIn('default', 'password');
+
+        $this->assertDatabaseHas('users', ['id' => $admin->id]);
+    }
+
+    public function test_student_with_approved_evidence_or_locked_group_cannot_delete_account(): void
+    {
+        $student = User::factory()->create(['role' => 'student']);
+        $portfolio = $student->portfolios()->create(['title' => 'Portfolio', 'study' => 'BOL']);
+        $portfolio->evidence()->create([
+            'title' => 'Akkoord', 'status' => 'akkoord', 'work_process' => '1', 'category' => 'Project', 'item_number' => 1,
+        ]);
+
+        $this->actingAs($student)->delete('/profile', ['password' => 'password'])
+            ->assertSessionHasErrors('password');
+        $this->assertDatabaseHas('users', ['id' => $student->id]);
+
+        $student->portfolios()->first()->evidence()->delete();
+        $graduated = Group::where('lifecycle_status', 'geslaagd')->firstOrFail();
+        $student->groups()->sync([$graduated->id]);
+        $this->delete('/profile', ['password' => 'password'])->assertSessionHasErrors('password');
+        $this->assertDatabaseHas('users', ['id' => $student->id]);
     }
 }

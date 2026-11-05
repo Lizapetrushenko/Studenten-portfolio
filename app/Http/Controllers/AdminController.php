@@ -29,7 +29,8 @@ class AdminController extends Controller
             'email' => ['required', 'email', 'lowercase', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
-        User::create([...$data, 'username' => strtolower(str_replace(' ', '-', $data['name'])) . '-' . substr(md5($data['email']), 0, 6), 'role' => 'teacher', 'email_verified_at' => now(), 'password' => Hash::make($data['password'])]);
+        User::forceCreate([...$data, 'username' => strtolower(str_replace(' ', '-', $data['name'])).'-'.substr(md5($data['email']), 0, 6), 'role' => 'teacher', 'email_verified_at' => now(), 'password' => Hash::make($data['password'])]);
+
         return back()->with('status', 'Docent toegevoegd.');
     }
 
@@ -56,11 +57,14 @@ class AdminController extends Controller
     public function createGroup(Request $request): RedirectResponse
     {
         $data = $request->validate(['name' => ['required', 'string', 'max:120'], 'teacher_id' => ['nullable', 'exists:users,id']]);
-        if (!empty($data['teacher_id'])) abort_unless(User::whereKey($data['teacher_id'])->where('role', 'teacher')->exists(), 422);
+        if (! empty($data['teacher_id'])) {
+            abort_unless(User::whereKey($data['teacher_id'])->where('role', 'teacher')->exists(), 422);
+        }
         $group = Group::create($data);
         foreach (['Afstemmen en plannen', 'Ontwerpen', 'Realisatie', 'Testen', 'Verbetervoorstellen', 'Projectteam', 'Presenteren', 'Evalueer'] as $index => $name) {
             $group->workProcesses()->create(['number' => $index + 1, 'name' => $name]);
         }
+
         return back()->with('status', 'Groep aangemaakt.');
     }
 
@@ -68,6 +72,7 @@ class AdminController extends Controller
     {
         $group->load(['teacher', 'students' => fn ($query) => $query->orderBy('last_name')->orderBy('first_name')]);
         $teachers = User::where('role', 'teacher')->orderBy('name')->get();
+
         return view('admin.group', compact('group', 'teachers'));
     }
 
@@ -80,18 +85,23 @@ class AdminController extends Controller
             'photo' => ['nullable', 'image', 'max:5120'],
             'remove_photo' => ['nullable', 'boolean'],
         ]);
-        if (!empty($data['teacher_id'])) abort_unless(User::whereKey($data['teacher_id'])->where('role', 'teacher')->exists(), 422);
+        if (! empty($data['teacher_id'])) {
+            abort_unless(User::whereKey($data['teacher_id'])->where('role', 'teacher')->exists(), 422);
+        }
         if ($request->boolean('remove_photo') && $group->photo_path) {
             Storage::disk('public')->delete($group->photo_path);
             $group->photo_path = null;
         }
         if ($request->hasFile('photo')) {
-            if ($group->photo_path) Storage::disk('public')->delete($group->photo_path);
+            if ($group->photo_path) {
+                Storage::disk('public')->delete($group->photo_path);
+            }
             $group->photo_path = $request->file('photo')->store('groups', 'public');
         }
         $group->name = $data['name'];
         $group->teacher_id = $data['teacher_id'] ?? null;
         $group->save();
+
         return back()->with('status', 'Groepsgegevens opgeslagen.');
     }
 
@@ -106,6 +116,7 @@ class AdminController extends Controller
         $primaryGroupId = $statusIds[0]
             ?? Group::whereIn('id', $ids)->whereNull('lifecycle_status')->value('id');
         $student->update(['group_id' => $primaryGroupId]);
+
         return back()->with('status', 'Groepslidmaatschappen opgeslagen.');
     }
 
@@ -123,6 +134,7 @@ class AdminController extends Controller
         }
         $section = $user->isStudent() ? 'students' : 'teachers';
         $user->delete();
+
         return redirect()->route('admin.dashboard', ['section' => $section])->with('status', 'Account verwijderd.');
     }
 }
