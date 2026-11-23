@@ -1,8 +1,7 @@
 <x-app-layout headerTitle="Groepen">
     <div class="portal-shell space-y-6">
         <a href="{{ route('teacher.dashboard') }}" class="teacher-link back-button">← Terug naar dashboard</a>
-        @if (session('status'))<div class="panel" role="status">{{ session('status') }}</div>@endif
-        @if ($errors->any())<div class="panel text-red-700">{{ $errors->first() }}</div>@endif
+        @if ($errors->any())<div x-data="{ visible: true }" x-init="setTimeout(() => visible = false, 5000)" x-show="visible" x-transition.opacity role="alert" aria-live="assertive" class="panel text-red-700">{{ $errors->first() }}</div>@endif
         <section class="panel">
             <div class="section-title"><div><p class="eyebrow">DOCENT</p><h2>Groep aanmaken</h2></div></div>
             <form method="POST" action="{{ route('teacher.groups.store') }}" class="teacher-add-student">@csrf

@@ -52,7 +52,12 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::get('/', [AdminController::class, 'index'])->name('dashboard');
     Route::get('/instellingen', [\App\Http\Controllers\EducationSettingsController::class, 'index'])->name('settings');
     Route::post('/instellingen/opleidingen', [\App\Http\Controllers\EducationSettingsController::class, 'storeProgram'])->name('programs.store');
+    Route::put('/instellingen/opleidingen', [\App\Http\Controllers\EducationSettingsController::class, 'savePrograms'])->name('programs.save');
+    Route::delete('/instellingen/opleidingen/{program}', [\App\Http\Controllers\EducationSettingsController::class, 'destroyProgram'])->name('programs.destroy');
     Route::patch('/instellingen/opleidingen/{program}', [\App\Http\Controllers\EducationSettingsController::class, 'updateProgram'])->name('programs.update');
+    Route::post('/instellingen/opleidingen/{program}/kerntaken', [\App\Http\Controllers\EducationSettingsController::class, 'storeCoreTask'])->name('core-tasks.store');
+    Route::patch('/instellingen/opleidingen/{program}/kerntaken/{task}', [\App\Http\Controllers\EducationSettingsController::class, 'updateCoreTask'])->name('core-tasks.update');
+    Route::delete('/instellingen/opleidingen/{program}/kerntaken/{task}', [\App\Http\Controllers\EducationSettingsController::class, 'destroyCoreTask'])->name('core-tasks.destroy');
     Route::post('/instellingen/opleidingen/{program}/werkprocessen', [\App\Http\Controllers\EducationSettingsController::class, 'storeProcess'])->name('processes.store');
     Route::patch('/instellingen/opleidingen/{program}/werkprocessen/{process}', [\App\Http\Controllers\EducationSettingsController::class, 'updateProcess'])->name('processes.update');
     Route::delete('/instellingen/opleidingen/{program}/werkprocessen/{process}', [\App\Http\Controllers\EducationSettingsController::class, 'destroyProcess'])->name('processes.destroy');
@@ -71,13 +76,13 @@ Route::middleware(['auth', 'verified', 'role:teacher'])->prefix('docent')->name(
     Route::get('/', [TeacherController::class, 'index'])->name('dashboard');
     Route::post('/groepen', [TeacherController::class, 'createGroup'])->name('groups.store');
     Route::get('/groepen', [TeacherController::class, 'groups'])->name('groups.index');
-    Route::get('/werkprocessen', fn () => abort(403))->name('work-processes.index');
+    Route::get('/werkprocessen', [TeacherController::class, 'workProcesses'])->name('work-processes.index');
     Route::get('/groepen/{group}', [TeacherController::class, 'showGroup'])->name('groups.show');
     Route::patch('/groepen/{group}', [TeacherController::class, 'updateGroup'])->name('groups.update');
     Route::get('/studenten', [TeacherController::class, 'students'])->name('students.index');
     Route::get('/studenten/{student}', [TeacherController::class, 'showStudent'])->name('students.show');
     Route::get('/groepen/{group}/voortgang', [TeacherController::class, 'groupProgress'])->name('groups.progress');
-    Route::get('/groepen/{group}/instellingen', fn () => abort(403))->name('groups.settings');
+    Route::get('/groepen/{group}/instellingen', [TeacherController::class, 'showGroupSettings'])->name('groups.settings');
     Route::post('/groepen/{group}/werkprocessen', fn () => abort(403))->name('groups.work-processes.store');
     Route::patch('/groepen/{group}/werkprocessen/{workProcess}', fn () => abort(403))->name('groups.work-processes.update');
     Route::delete('/groepen/{group}/werkprocessen/{workProcess}', fn () => abort(403))->name('groups.work-processes.destroy');

@@ -63,10 +63,6 @@ class AdminController extends Controller
         $group = Group::create($data);
         $program = \App\Models\EducationProgram::where('name', 'Software Developer')->firstOrFail();
         $group->update(['education_program_id' => $program->id]);
-        foreach ($program->workProcesses as $process) {
-            $group->workProcesses()->create(['number' => $process->number, 'name' => $process->name]);
-        }
-
         return back()->with('status', 'Groep aangemaakt.');
     }
 
@@ -110,14 +106,22 @@ class AdminController extends Controller
     public function assignStudent(Request $request, User $student): RedirectResponse
     {
         abort_unless($student->role === 'student', 404);
-        $data = $request->validate(['group_ids' => ['nullable', 'array'], 'group_ids.*' => ['integer', 'exists:groups,id']]);
+        $data = $request->validate([
+            'group_ids' => ['required', 'array', 'min:1'],
+            'group_ids.*' => ['integer', 'exists:groups,id'],
+        ], [
+            'group_ids.required' => 'Selecteer minimaal één groep.',
+            'group_ids.min' => 'Selecteer minimaal één groep.',
+        ]);
         $ids = $data['group_ids'] ?? [];
         $statusIds = Group::whereNotNull('lifecycle_status')->whereIn('id', $ids)->pluck('id')->all();
-        abort_if(count($statusIds) > 1, 422, 'Een student kan maar één statusgroep tegelijk hebben.');
-        $student->groups()->sync($ids);
-        $primaryGroupId = $statusIds[0]
-            ?? Group::whereIn('id', $ids)->whereNull('lifecycle_status')->value('id');
-        $student->update(['group_id' => $primaryGroupId]);
+        abort_if(count($statusIds) > 1, 422, 'Kies maximaal één statusgroep.');
+        $teachingGroupIds = Group::whereIn('id', $ids)->whereNull('lifecycle_status')->pluck('id')->all();
+        abort_if($teachingGroupIds === [], 422, 'Selecteer minimaal één gewone lesgroep.');
+        $currentStatusGroupId = $student->groups()->whereNotNull('lifecycle_status')->value('groups.id');
+        $statusGroupIdsToKeep = $statusIds ?: ($currentStatusGroupId ? [$currentStatusGroupId] : []);
+        $student->groups()->sync(array_unique([...$teachingGroupIds, ...$statusGroupIdsToKeep]));
+        $student->update(['group_id' => $teachingGroupIds[0]]);
 
         return back()->with('status', 'Groepslidmaatschappen opgeslagen.');
     }

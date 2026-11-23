@@ -4,9 +4,7 @@
     </div>
 
     @if (session('status') == 'verification-link-sent')
-        <div class="mb-4 font-medium text-sm text-green-600">
-            Er is een nieuwe bevestigingslink naar je e-mailadres gestuurd.
-        </div>
+        <x-auth-session-status status="verification-link-sent" />
     @endif
 
     <div class="mt-4 flex items-center justify-between">

@@ -50,7 +50,7 @@
                         <div class="section-title"><div><p class="eyebrow">03 / OVERZICHT</p><h2>Van je werkzaamheden</h2></div></div>
                         @if(count($processes))
                             <div class="spin-chart-widget-small">
-                                <div class="spin-chart-container-small" data-chart-data="{{ $spinChartData }}" data-chart-labels="{{ json_encode(collect($processes)->map(fn ($process) => $process['kerntaak'] . $process['work_label'])->values()) }}">
+                                <div class="spin-chart-container-small" data-chart-data="{{ $spinChartData }}" data-chart-labels="{{ json_encode(collect($processes)->pluck('work_process_code')->values()) }}">
                                     <canvas id="spinChart"></canvas>
                                 </div>
                                 <div class="spin-legend-small" aria-label="Legenda status bewijsstukken">
@@ -71,8 +71,8 @@
         $kerntaken = collect($processes)->groupBy('kerntaak');
         $requestedProcess = (string) request('werkproces', '');
         $requestedProcessData = collect($processes)->firstWhere('code', $requestedProcess);
-        $selectedKerntaak = $requestedProcessData['kerntaak'] ?? (request('kerntaak') === 'K2' ? 'K2' : 'K1');
-        if (!$kerntaken->has($selectedKerntaak)) $selectedKerntaak = $kerntaken->keys()->first() ?? 'K1';
+        $requestedKerntaak = (string) request('kerntaak', '');
+        $selectedKerntaak = $requestedProcessData['kerntaak'] ?? ($kerntaken->has($requestedKerntaak) ? $requestedKerntaak : ($kerntaken->keys()->first() ?? ''));
         $activeProcessCode = $requestedProcessData['code'] ?? ($kerntaken->get($selectedKerntaak)?->first()['code'] ?? '');
         @endphp
         <div class="evidence-plan evidence-plan-shell" x-data="{ selectedKerntaak: @js($selectedKerntaak), selectedProcess: @js((string) $activeProcessCode) }">
@@ -87,7 +87,7 @@
                         aria-controls="work-process-tabs-{{ $kerntaak }}"
                         :aria-selected="selectedKerntaak === '{{ $kerntaak }}'"
                         :class="selectedKerntaak === '{{ $kerntaak }}' ? 'kerntaak-tab is-active' : 'kerntaak-tab'"
-                        @click="selectedKerntaak = '{{ $kerntaak }}'; selectedProcess = '{{ $taskProcesses->first()['code'] }}'; const url = new URL(window.location.href); url.searchParams.set('kerntaak', selectedKerntaak); url.searchParams.set('werkproces', selectedProcess); window.history.replaceState({}, '', url)">{{ $kerntaak }}</button>
+                        @click="selectedKerntaak = '{{ $kerntaak }}'; selectedProcess = '{{ $taskProcesses->first()['code'] }}'; const url = new URL(window.location.href); url.searchParams.set('kerntaak', selectedKerntaak); url.searchParams.set('werkproces', selectedProcess); window.history.replaceState({}, '', url)">{{ $kerntaak }} · {{ $taskProcesses->first()['kerntaak_name'] }}</button>
                     @endforeach
                 </div>
                 <div class="process-main">
@@ -123,7 +123,7 @@
                             aria-labelledby="work-process-tab-{{ $process['code'] }}"
                             x-show="selectedProcess === '{{ $process['code'] }}'"
                             x-cloak>
-                            <h3>{{ $process['kerntaak'] }}{{ $process['work_label'] }} — {{ $process['name'] }} <span class="process-count">{{ $items->count() }} bewijsstukken</span></h3>
+                            <h3>{{ $process['work_process_code'] }} — {{ $process['name'] }} <span class="process-count">{{ $items->count() }} bewijsstukken</span></h3>
                             @forelse ($items as $item)
                             <form method="POST" action="{{ route('evidence.update', $item) }}" class="plan-row" enctype="multipart/form-data" x-data="{ evidenceStatus: @js($item->status === 'nakijken' ? 'ingeleverd' : $item->status) }">@csrf @method('PATCH')
                                 <div class="plan-number">{{ $item->item_number }}</div>

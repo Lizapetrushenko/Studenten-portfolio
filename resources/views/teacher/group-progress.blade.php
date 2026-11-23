@@ -1,7 +1,6 @@
 <x-app-layout headerTitle="Voortgang · {{ $group->name }}">
     <div class="portal-shell space-y-6">
         <a href="{{ route('teacher.groups.show', $group) }}" class="teacher-link back-button">← Terug naar groep {{ $group->name }}</a>
-        @if (session('status'))<div class="panel" role="status">{{ session('status') }}</div>@endif
         <section class="panel progress-panel">
             <div class="section-title">
                 <div><p class="eyebrow">GROEP · {{ $group->name }}</p><h2>Voortgangsoverzicht</h2></div>
@@ -26,7 +25,7 @@
                 <div class="progress-scroll" tabindex="0" role="region" aria-label="Voortgangstabel, horizontaal scrollbaar">
                     <table class="progress-table">
                         <caption class="sr-only">Bewijsstukken per student en werkproces voor {{ $group->name }}</caption>
-                        <thead><tr><th scope="col">Student</th>@foreach($processes as $process)<th scope="col"><abbr title="{{ $process->name }}">{{ $process->number <= 5 ? 'K1W'.$process->number : 'K2W'.($process->number - 5) }}</abbr></th>@endforeach</tr></thead>
+                        <thead><tr><th scope="col">Student</th>@foreach($processes as $process)<th scope="col"><abbr title="{{ $process->name }}">{{ $process->code ?? $process->number }}</abbr></th>@endforeach</tr></thead>
                         <tbody>
                             @forelse($rows as $row)
                                 <tr><th scope="row"><a class="teacher-link" href="{{ route('teacher.students.show', $row['student']) }}">{{ $row['student']->displayName() }}</a>@if(!$row['portfolio'])<small>Nog geen portfolio</small>@endif</th>

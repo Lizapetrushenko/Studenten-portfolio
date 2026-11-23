@@ -1,8 +1,7 @@
 <x-app-layout headerTitle="Portfolio van {{ $student->name }}">
     <div class="portal-shell space-y-6 teacher-portfolio-page">
         <a href="{{ route('teacher.students.show', $student) }}" class="teacher-link back-button">← Terug naar studentgegevens</a>
-        @if (session('status'))<div class="panel" role="status">{{ session('status') }}</div>@endif
-        @if ($errors->any())<div class="panel text-red-700">{{ $errors->first() }}</div>@endif
+        @if ($errors->any())<div x-data="{ visible: true }" x-init="setTimeout(() => visible = false, 5000)" x-show="visible" x-transition.opacity role="alert" aria-live="assertive" class="panel text-red-700">{{ $errors->first() }}</div>@endif
         <section class="panel">
             <p class="eyebrow">STUDENTPORTFOLIO</p><h2>{{ $portfolio->title }}</h2><p>{{ $student->displayName() }} · {{ $student->email }} · {{ $student->student_number }} · {{ $student->study_type ?: $portfolio->study }}</p>
             @if($portfolio->bio)<p class="mt-3">{{ $portfolio->bio }}</p>@endif
