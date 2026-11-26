@@ -1,6 +1,6 @@
 <x-app-layout headerTitle="Instellingen">
     <div class="portal-shell space-y-6" x-data="{ section: ['dashboard', 'teachers', 'students', 'groups'].includes(new URLSearchParams(window.location.search).get('section')) ? new URLSearchParams(window.location.search).get('section') : 'dashboard' }" x-init="$watch('section', value => { const url = new URL(window.location.href); if (value === 'dashboard') url.searchParams.delete('section'); else url.searchParams.set('section', value); window.history.replaceState({}, '', url); })">
-        @if ($errors->any())<div class="panel text-red-700">{{ $errors->first() }}</div>@endif
+        @if ($errors->any())<div x-data="{ visible: true }" x-init="setTimeout(() => visible = false, 5000)" x-show="visible" x-transition.opacity role="alert" aria-live="assertive" class="panel text-red-700">{{ $errors->first() }}</div>@endif
 
         <section class="panel admin-dashboard-panel" style="border: 1px solid var(--accent);" x-show="section === 'dashboard'">
             <div class="section-title"><div><p class="eyebrow">BEHEER</p><h2>Instellingen</h2></div></div>

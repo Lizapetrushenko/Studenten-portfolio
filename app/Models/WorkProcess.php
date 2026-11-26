@@ -4,19 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class WorkProcess extends Model
 {
-    protected $fillable = ['number', 'name'];
+    protected $fillable = ['core_task_id', 'number', 'code', 'name'];
 
-    public function portfolio(): BelongsTo
+    public function coreTask(): BelongsTo
     {
-        return $this->belongsTo(Portfolio::class);
-    }
-
-    public function evidence(): HasMany
-    {
-        return $this->hasMany(Evidence::class, 'work_process', 'number');
+        return $this->belongsTo(CoreTask::class);
     }
 }

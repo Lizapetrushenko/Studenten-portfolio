@@ -2,10 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class Beheerder extends Model
+/** @deprecated Use User with role=admin; kept as a compatibility alias. */
+class Beheerder extends User
 {
-    protected $table = 'administrators';
-    protected $fillable = ['naam'];
+    protected $table = 'users';
 }
