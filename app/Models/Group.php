@@ -25,7 +25,7 @@ class Group extends Model
     public function educationProgram(): BelongsTo { return $this->belongsTo(EducationProgram::class); }
 
     public function teacher(): BelongsTo { return $this->belongsTo(User::class, 'teacher_id'); }
-    public function students(): BelongsToMany { return $this->belongsToMany(User::class)->withTimestamps(); }
+    public function students(): BelongsToMany { return $this->belongsToMany(User::class)->where('users.role', '!=', 'test_account')->withTimestamps(); }
     public function workProcesses(): HasManyThrough
     {
         return $this->hasManyThrough(

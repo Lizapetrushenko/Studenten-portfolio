@@ -1,9 +1,29 @@
 <x-app-layout headerTitle="Mijn portfolio">
+    @php
+        $testStudent = auth()->user()->canSwitchTestRole() && auth()->user()->isStudent() ? config('test_account.student', []) : [];
+    @endphp
     <div class="portal-shell portfolio-page">
             <div class="portfolio-sections">
                 <section class="panel portfolio-panel {{ !$portfolio ? 'portfolio-panel-empty' : '' }}" x-data="{ editing: false }">
                     <div class="section-title"><div><p class="eyebrow">01 / PROFIEL</p><h2>Portfolio-informatie</h2></div><div class="flex items-center gap-3"><span class="tag">{{ $portfolio ? 'Actief' : 'Start hier' }}</span>@if($portfolio && !$portfolioLocked && !$submitOnly)<button type="button" class="button tiny-button" @click.prevent="editing = !editing" x-text="editing ? 'Annuleren' : 'Aanpassen'"></button>@endif</div></div>
                     
+                    @if (!empty($testStudent['name']) || !empty($testStudent['number']))
+                        <dl class="portfolio-info">
+                            @if (!empty($testStudent['name']))
+                                <div class="info-item">
+                                    <dt class="info-label">Student</dt>
+                                    <dd class="info-value">{{ $testStudent['name'] }}</dd>
+                                </div>
+                            @endif
+                            @if (!empty($testStudent['number']))
+                                <div class="info-item">
+                                    <dt class="info-label">Studentnummer</dt>
+                                    <dd class="info-value">{{ $testStudent['number'] }}</dd>
+                                </div>
+                            @endif
+                        </dl>
+                    @endif
+
                     @if($portfolio)
                         <!-- Portfolio Bestaande Info -->
                         <div class="portfolio-info" x-show="!editing">
@@ -13,7 +33,7 @@
                             </div>
                             <div class="info-item">
                                 <label class="info-label">Leerweg:</label>
-                                <p class="info-value">{{ auth()->user()->leerweg ?: 'Nog niet ingesteld' }}</p>
+                                <p class="info-value">{{ $testStudent['study_path'] ?? (auth()->user()->leerweg ?: 'Nog niet ingesteld') }}</p>
                             </div>
                             <div class="info-item">
                                 <label class="info-label">Korte introductie:</label>
@@ -34,7 +54,7 @@
                         @if(!$portfolioLocked)
                         <form method="POST" action="{{ route('portfolio.store') }}" class="form-grid portfolio-form">@csrf
                             <label>Projectnaam<input name="title" value="{{ old('title') }}" placeholder="Schrijf zelf je projectnaam" required></label>
-                            <label>Leerweg<input value="{{ auth()->user()->leerweg ?: 'Nog niet ingesteld' }}" readonly></label>
+                            <label>Leerweg<input value="{{ $testStudent['study_path'] ?? (auth()->user()->leerweg ?: 'Nog niet ingesteld') }}" readonly></label>
                             <label class="full">Korte introductie<textarea name="bio" rows="3" placeholder="Waar ben je trots op?">{{ old('bio') }}</textarea></label>
                             <div class="full"><button class="button" type="submit">Portfolio opslaan</button></div>
                         </form>

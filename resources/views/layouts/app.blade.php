@@ -17,6 +17,20 @@
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100">
             @include('layouts.portal-header', ['headerTitle' => $headerTitle])
+            @if (auth()->user()?->canSwitchTestRole())
+                @php($activeRole = auth()->user()->effectiveRole())
+                <form method="POST" action="{{ route('test-role.update') }}" class="max-w-7xl mx-auto px-4 py-4">
+                    @csrf
+                    <label for="test-role" class="block font-medium">Actieve testrol</label>
+                    <select id="test-role" name="role" class="rounded-md border-gray-300" required>
+                        <option value="" disabled @selected($activeRole === 'test_account')>Kies een rol</option>
+                        @foreach (\App\Models\User::TEST_ROLES as $role => $label)
+                            <option value="{{ $role }}" @selected($activeRole === $role)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <x-primary-button>Wisselen</x-primary-button>
+                </form>
+            @endif
 
             <!-- Page Content -->
             <main>
