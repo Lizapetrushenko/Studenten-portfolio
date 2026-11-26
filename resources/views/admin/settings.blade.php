@@ -56,6 +56,30 @@
                 (() => {
                     const rows = document.getElementById('program-rows');
                     const addButton = document.getElementById('add-program-row');
+                    const educationNames = {{ Illuminate\Support\Js::from((object) $educationNames) }};
+                    rows.addEventListener('input', event => {
+                        const codeInput = event.target;
+                        if (!codeInput.matches('input[name$="[code]"]')) return;
+                        const row = codeInput.closest('tr');
+                        const nameInput = row.querySelector('input[name$="[name]"]');
+                        let message = row.querySelector('[data-lookup-message]');
+                        if (!message) {
+                            message = document.createElement('small');
+                            message.dataset.lookupMessage = '';
+                            message.setAttribute('role', 'status');
+                            codeInput.parentElement.appendChild(message);
+                        }
+                        const code = codeInput.value.trim();
+                        const name = Object.hasOwn(educationNames, code) ? educationNames[code] : null;
+                        if (name) {
+                            if (nameInput.value.toLowerCase() !== name.toLowerCase()) nameInput.value = name;
+                            message.textContent = '';
+                        } else {
+                            if (nameInput.dataset.lookupName && nameInput.value === nameInput.dataset.lookupName) nameInput.value = '';
+                            message.textContent = code ? 'Code niet gevonden. Vul de opleidingsnaam handmatig in.' : '';
+                        }
+                        nameInput.dataset.lookupName = name || '';
+                    });
                     let nextIndex = rows.querySelectorAll('tr').length;
                     addButton.addEventListener('click', () => {
                         const row = document.createElement('tr');

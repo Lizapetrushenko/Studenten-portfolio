@@ -18,7 +18,9 @@ class EducationSettingsController extends Controller
         $program = $request->filled('program') ? EducationProgram::findOrFail($request->query('program')) : EducationProgram::where('name', 'Software Developer')->firstOrFail();
         $program->load(['coreTasks.workProcesses', 'workProcesses']);
         $groups = Group::whereNull('lifecycle_status')->with('educationProgram')->withCount('students')->orderBy('name')->get();
-        return view('admin.settings', compact('programs', 'program', 'groups'));
+        $educationNames = app(\App\Services\EducationCodeCatalog::class)
+            ->names(storage_path('app/private/imports/courses.csv'));
+        return view('admin.settings', compact('programs', 'program', 'groups', 'educationNames'));
     }
     public function storeProgram(Request $request)
     {
