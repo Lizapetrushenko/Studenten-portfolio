@@ -84,10 +84,11 @@
                         type="button"
                         id="kerntaak-tab-{{ $kerntaak }}"
                         role="tab"
+                        aria-label="{{ $kerntaak }} — {{ $taskProcesses->first()['kerntaak_name'] }}"
                         aria-controls="work-process-tabs-{{ $kerntaak }}"
                         :aria-selected="selectedKerntaak === '{{ $kerntaak }}'"
                         :class="selectedKerntaak === '{{ $kerntaak }}' ? 'kerntaak-tab is-active' : 'kerntaak-tab'"
-                        @click="selectedKerntaak = '{{ $kerntaak }}'; selectedProcess = '{{ $taskProcesses->first()['code'] }}'; const url = new URL(window.location.href); url.searchParams.set('kerntaak', selectedKerntaak); url.searchParams.set('werkproces', selectedProcess); window.history.replaceState({}, '', url)">{{ $kerntaak }} · {{ $taskProcesses->first()['kerntaak_name'] }}</button>
+                        @click="selectedKerntaak = '{{ $kerntaak }}'; selectedProcess = '{{ $taskProcesses->first()['code'] }}'; const url = new URL(window.location.href); url.searchParams.set('kerntaak', selectedKerntaak); url.searchParams.set('werkproces', selectedProcess); window.history.replaceState({}, '', url)">{{ \Illuminate\Support\Str::after($kerntaak, '-') }}</button>
                     @endforeach
                 </div>
                 <div class="process-main">

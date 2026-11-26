@@ -19,7 +19,9 @@ class PortfolioController extends Controller
         abort_unless($request->user()->isStudent(), 403);
         $student = $request->user()->load('groups.workProcesses.coreTask');
         $portfolio = $student->portfolios()->with('evidence')->first();
-        $workGroups = $student->groups->filter(fn ($group) => $group->isTeacherLinked());
+        // A student's active group membership determines the available curriculum.
+        // Requiring a linked teacher here hides work processes for valid group members.
+        $workGroups = $student->groups->filter(fn ($group) => $group->lifecycle_status === null);
         $processCollection = $workGroups->flatMap->workProcesses->unique('number')->sortBy('number');
         $processes = $processCollection->map(fn ($process) => [
             'code' => (string) $process->number,
@@ -123,7 +125,7 @@ class PortfolioController extends Controller
             'url' => ['nullable', 'url', 'max:500'],
             'file' => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
         ]);
-        abort_unless($request->user()->groups()->teacherLinked()->whereHas('workProcesses', fn ($query) => $query->where('number', $validated['work_process']))->exists(), 422, 'Dit werkproces hoort niet bij jouw groep.');
+        abort_unless($request->user()->groups()->whereNull('lifecycle_status')->whereHas('workProcesses', fn ($query) => $query->where('number', $validated['work_process']))->exists(), 422, 'Dit werkproces hoort niet bij jouw groep.');
 
         $storedPath = null;
         if ($request->hasFile('file')) {

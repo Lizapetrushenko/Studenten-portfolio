@@ -30,7 +30,6 @@ Route::get('/auth/google/callback', [SocialAuthController::class, 'callback'])->
 Route::get('/token-login', [TokenAuthController::class, 'show'])->name('token.login');
 Route::post('/token-login/generate', [TokenAuthController::class, 'issue'])->name('token.issue');
 Route::post('/token-login', [TokenAuthController::class, 'authenticate'])->name('token.authenticate');
-Route::post('/api/token-login', [TokenAuthController::class, 'login'])->name('token.api.login');
 Route::get('/mfa', [MfaController::class, 'challenge'])->name('mfa.challenge');
 Route::post('/mfa', [MfaController::class, 'verify'])->name('mfa.verify');
 Route::post('/register', [App\Http\Controllers\Auth\RegisteredUserController::class, 'store'])->name('register');
