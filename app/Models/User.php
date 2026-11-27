@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\StudentDocumentCache;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
@@ -20,6 +21,9 @@ class User extends Authenticatable implements MustVerifyEmail
 
     protected static function booted(): void
     {
+        static::saved(fn (User $user) => StudentDocumentCache::forgetStudent($user->id));
+        static::deleted(fn (User $user) => StudentDocumentCache::forgetStudent($user->id));
+
         static::saving(function (User $user) {
             $user->education = ($user->role ?? 'student') === 'student' ? ($user->education ?: 'Software Developer') : null;
         });

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Group;
 use App\Models\User;
+use App\Support\StudentDocumentCache;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -17,7 +18,7 @@ class AdminController extends Controller
     {
         return view('admin.index', [
             'teachers' => User::where('role', 'teacher')->withCount('teachingGroups')->orderBy('name')->get(),
-            'students' => User::where('role', 'student')->with(['groups', 'reviewers'])->orderBy('last_name')->orderBy('first_name')->get(),
+            'students' => StudentDocumentCache::studentDirectory(),
             'groups' => Group::with(['teacher', 'students'])->withCount('students')->orderBy('name')->get(),
         ]);
     }
@@ -122,6 +123,7 @@ class AdminController extends Controller
         $statusGroupIdsToKeep = $statusIds ?: ($currentStatusGroupId ? [$currentStatusGroupId] : []);
         $student->groups()->sync(array_unique([...$teachingGroupIds, ...$statusGroupIdsToKeep]));
         $student->update(['group_id' => $teachingGroupIds[0]]);
+        StudentDocumentCache::forgetStudentDirectory();
 
         return back()->with('status', 'Groepslidmaatschappen opgeslagen.');
     }
