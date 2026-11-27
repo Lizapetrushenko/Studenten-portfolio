@@ -36,7 +36,7 @@
                             </div>
                         @endif
                         @if($canReview && !in_array($item->status, ['akkoord', 'idee'], true))<form method="POST" action="{{ route('teacher.evidence.review', $item) }}" class="form-grid">@csrf @method('PATCH')
-                            <label>Beoordeling<select name="status" required><option value="">Kies een beoordeling</option><option value="akkoord" @selected($item->status === 'akkoord')>Akkoord</option><option value="niet akkoord" @selected($item->status === 'niet akkoord')>Niet akkoord</option></select></label>
+                            <label>Beoordeling<select name="status" required><option value="">Kies een beoordeling</option><option value="nakijken" @selected($item->status === 'nakijken')>Nakijken</option><option value="akkoord" @selected($item->status === 'akkoord')>Akkoord</option><option value="niet akkoord" @selected($item->status === 'niet akkoord')>Niet akkoord</option></select></label>
                             <label>Notitie docent<textarea name="feedback" rows="2" maxlength="2000">{{ $item->feedback }}</textarea></label>
                             <div class="full"><button class="button">Beoordeling opslaan</button></div>
                         </form>@elseif($item->status === 'akkoord')<p class="font-semibold text-green-700">Dit bewijsstuk is akkoord en vergrendeld.</p>@elseif(!$canReview)<p class="text-gray-600">Je bent niet gekoppeld als beoordelaar en kunt dit bewijsstuk niet beoordelen.</p>@endif

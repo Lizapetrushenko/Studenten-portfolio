@@ -225,7 +225,11 @@ class PortfolioController extends Controller
             && in_array($evidence->status, ['ingeleverd', 'akkoord', 'niet akkoord'], true)
             && ($student->groups()->where('teacher_id', $user->id)->exists()
                 || $student->reviewers()->whereKey($user->id)->exists());
-        abort_unless($isOwner || $teacherCanSeeEvidence, 404);
+        $testTeacherCanSeeOwnEvidence = $user->canSwitchTestRole()
+            && $user->isTeacher()
+            && $evidence->portfolio->user_id === $user->id
+            && in_array($evidence->status, ['ingeleverd', 'akkoord', 'niet akkoord', 'nakijken'], true);
+        abort_unless($isOwner || $teacherCanSeeEvidence || $testTeacherCanSeeOwnEvidence, 404);
         abort_unless($evidence->file_path, 404);
 
         $disk = Storage::disk('local')->exists($evidence->file_path) ? 'local' : 'public';

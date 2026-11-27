@@ -8,6 +8,7 @@ use App\Http\Controllers\TokenAuthController;
 use App\Http\Controllers\MfaController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\TestRoleController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -18,9 +19,10 @@ Route::get('/screens', function () {
 })->name('screens.index');
 
 Route::get('/dashboard', function () {
-    return match (auth()->user()->role) {
+    return match (auth()->user()->effectiveRole()) {
         'admin' => redirect()->route('admin.dashboard'),
         'teacher' => redirect()->route('teacher.dashboard'),
+        'test_account' => view('test-role-dashboard'),
         default => app(PortfolioController::class)->index(request()),
     };
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -37,6 +39,7 @@ Route::get('/auth/github/redirect', [SocialAuthController::class, 'redirectToGit
 Route::get('/auth/github/callback', [SocialAuthController::class, 'handleGithubCallback'])->name('github.callback');
 
 Route::middleware('auth')->group(function () {
+    Route::post('/test-role', [TestRoleController::class, 'update'])->middleware('verified')->name('test-role.update');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

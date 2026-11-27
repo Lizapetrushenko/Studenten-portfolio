@@ -18,7 +18,7 @@ class TeacherController extends Controller
 {
     public function index(Request $request): View
     {
-        $groups = $request->user()->teachingGroups();
+        $groups = $this->visibleTeachingGroups($request->user());
         return view('teacher.index', [
             'groupCount' => (clone $groups)->count(),
             'studentCount' => User::where('role', 'student')->count(),
@@ -28,7 +28,7 @@ class TeacherController extends Controller
 
     public function groups(Request $request): View
     {
-        $groups = $request->user()->teachingGroups()->withCount('students')->orderBy('name')->get();
+        $groups = $this->visibleTeachingGroups($request->user())->withCount('students')->orderBy('name')->get();
         $baseGroups = Group::whereNotNull('lifecycle_status')
             ->withCount('students')
             ->orderByRaw("CASE lifecycle_status WHEN 'nieuw' THEN 0 WHEN 'herkansen' THEN 1 WHEN 'geslaagd' THEN 2 WHEN 'weg' THEN 3 ELSE 4 END")
@@ -68,10 +68,15 @@ class TeacherController extends Controller
     public function showGroup(Request $request, Group $group): View
     {
         $this->authorizeGroup($request, $group);
+        $group->load(['students.portfolios.evidence', 'students.reviewers', 'workProcesses']);
+        foreach ($group->students as $student) {
+            $this->loadTestPortfolio($request->user(), $student);
+        }
         $group->load(['students.reviewers', 'workProcesses']);
         $this->loadCachedStudentPortfolios($group->students);
         $availableStudents = User::where('role', 'student')->whereDoesntHave('groups', fn ($query) => $query->whereKey($group->id))->orderBy('last_name')->orderBy('first_name')->get();
-        return view('teacher.group', compact('group', 'availableStudents'));
+        $previewOnly = $this->canPreviewTestGroup($request->user(), $group);
+        return view('teacher.group', compact('group', 'availableStudents', 'previewOnly'));
     }
 
     public function groupProgress(Request $request, Group $group): View
@@ -93,10 +98,11 @@ class TeacherController extends Controller
         $rows = $group->students->sortBy(fn ($student) => mb_strtolower($student->displayName()))
             ->filter(fn ($student) => $search === '' || str_contains(mb_strtolower($student->displayName().' '.$student->name), mb_strtolower($search)))
             ->map(function ($student) use ($processes, $status, $statusOf, $request) {
+                $this->loadTestPortfolio($request->user(), $student);
                 $portfolio = $student->portfolios->first();
                 $evidence = ($portfolio?->evidence ?? collect())->filter(fn ($item) => $processes->contains(fn ($process) => (string) $process->number === (string) $item->work_process))
                     ->filter(fn ($item) => $status === '' || $statusOf($item) === $status);
-                return ['student' => $student, 'portfolio' => $portfolio, 'evidence' => $evidence->groupBy('work_process'), 'count' => $evidence->count(), 'canReview' => $student->groups->contains('teacher_id', $request->user()->id) || $student->reviewers->contains('id', $request->user()->id)];
+                return ['student' => $student, 'portfolio' => $portfolio, 'evidence' => $evidence->groupBy('work_process'), 'count' => $evidence->count(), 'canReview' => $student->groups->contains('teacher_id', $request->user()->id) || $student->reviewers->contains('id', $request->user()->id) || ($portfolio && $this->canReviewTestPortfolio($request->user(), $portfolio))];
             })->filter(fn ($row) => $status === '' || $row['count'] > 0)->values();
 
         return view('teacher.group-progress', compact('group', 'processes', 'rows', 'search', 'status', 'statuses'));
@@ -149,7 +155,9 @@ class TeacherController extends Controller
         $workProcesses = $student->groups->filter(fn ($group) => $group->isTeacherLinked())->flatMap->workProcesses->unique('number')->sortBy('number');
         $teachers = User::where('role', 'teacher')->orderBy('name')->get();
         $teacherGroups = $request->user()->teachingGroups()->orderBy('name')->get();
-        $canReview = $student->groups()->where('teacher_id', $request->user()->id)->exists() || $student->reviewers()->whereKey($request->user()->id)->exists();
+        $canReview = $this->canReviewTestPortfolio($request->user(), $portfolio)
+            || $student->groups()->where('teacher_id', $request->user()->id)->exists()
+            || $student->reviewers()->whereKey($request->user()->id)->exists();
         return view('teacher.portfolio', compact('student', 'portfolio', 'workProcesses', 'teachers', 'teacherGroups', 'canReview'));
     }
 
@@ -167,7 +175,13 @@ class TeacherController extends Controller
     public function reviewEvidence(Request $request, Evidence $evidence): RedirectResponse
     {
         $student = $evidence->portfolio->user;
-        abort_unless($student->isStudent() && ($student->groups()->where('teacher_id', $request->user()->id)->exists() || $student->reviewers()->whereKey($request->user()->id)->exists()), 404);
+        $teacher = $request->user();
+        abort_unless(
+            $this->canReviewTestPortfolio($teacher, $evidence->portfolio)
+            || ($student->isStudent() && ($student->groups()->where('teacher_id', $teacher->id)->exists()
+                || $student->reviewers()->whereKey($teacher->id)->exists())),
+            404,
+        );
         abort_if($evidence->status === 'idee', 404, 'Ideeën zijn alleen zichtbaar voor de student.');
         abort_if($evidence->status === 'akkoord', 422, 'Een akkoord bewijsstuk kan niet opnieuw worden beoordeeld.');
         $data = $request->validate([
@@ -175,7 +189,9 @@ class TeacherController extends Controller
             'feedback' => ['nullable', 'string', 'max:2000'],
         ]);
         if (array_key_exists('feedback', $data) && $data['feedback'] !== $evidence->feedback) {
-            $data['feedback_author_name'] = filled($data['feedback']) ? $request->user()->displayName() : null;
+            $data['feedback_author_name'] = filled($data['feedback']) ? ($this->canReviewTestPortfolio($teacher, $evidence->portfolio)
+                ? (config('test_account.teacher_name') ?: $teacher->displayName())
+                : $teacher->displayName()) : null;
         }
         $evidence->update($data);
         return back()->with('status', 'Beoordeling opgeslagen.');
@@ -238,8 +254,57 @@ class TeacherController extends Controller
         return redirect()->route('teacher.students.index')->with('status', 'Student uit het systeem verwijderd.');
     }
 
+    private function canReviewTestPortfolio(User $teacher, Portfolio $portfolio): bool
+    {
+        if (! $teacher->canSwitchTestRole() || ! $teacher->isTeacher() || $portfolio->user_id !== $teacher->id) {
+            return false;
+        }
+
+        $group = Group::find(config('test_account.teacher_group_id'));
+        if ($group?->teacher_id === null) {
+            return false;
+        }
+
+        return $group->students()->whereKey(config('test_account.student.user_id'))
+            ->whereHas('reviewers', fn (Builder $query) => $query->whereKey($group->teacher_id))
+            ->exists();
+    }
+
+    private function loadTestPortfolio(User $teacher, User $student): void
+    {
+        if ($teacher->canSwitchTestRole()
+            && $teacher->isTeacher()
+            && (string) $student->getKey() === (string) config('test_account.student.user_id')) {
+            $student->setRelation('portfolios', $teacher->portfolios()->with('evidence')->get());
+        }
+    }
+
+    private function visibleTeachingGroups(User $user): Builder
+    {
+        return Group::query()->where(function (Builder $query) use ($user) {
+            $query->where('teacher_id', $user->id);
+
+            if ($user->canSwitchTestRole() && $user->isTeacher() && config('test_account.teacher_group_id')) {
+                $query->orWhere('id', config('test_account.teacher_group_id'));
+            }
+        });
+    }
+
+    private function canPreviewTestGroup(User $user, Group $group): bool
+    {
+        return $user->canSwitchTestRole()
+            && $user->isTeacher()
+            && $group->teacher_id !== $user->id
+            && (string) $group->getKey() === (string) config('test_account.teacher_group_id');
+    }
+
     private function authorizeGroup(Request $request, Group $group): void
     {
-        abort_unless($group->lifecycle_status !== null || $group->teacher_id === $request->user()->id, 404);
+        abort_unless(
+            $group->lifecycle_status !== null
+            || $group->teacher_id === $request->user()->id
+            || ($request->isMethodSafe() && $this->canPreviewTestGroup($request->user(), $group)),
+            404,
+        );
     }
 }

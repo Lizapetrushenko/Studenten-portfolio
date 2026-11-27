@@ -6,7 +6,7 @@
         <section class="panel">
             @if($group->lifecycle_status)<x-group-status-photo :status="$group->lifecycle_status" size="h-40 w-40 mb-5" />@endif
             <div class="section-title"><div><p class="eyebrow">GROEP</p><h2>{{ $group->name }}</h2></div><span class="count">{{ $group->students->count() }} studenten</span></div>
-            @if(!$group->lifecycle_status)
+            @if(!$group->lifecycle_status && !$previewOnly)
                 <form method="POST" action="{{ route('teacher.groups.update', $group) }}" enctype="multipart/form-data" class="form-grid mb-6 border-b pb-5">@csrf @method('PATCH')
                     <label>Naam van de groep<input name="name" value="{{ $group->name }}" maxlength="120" required></label>
                     <label>Groepsfoto<input type="file" name="photo" accept="image/*"><span class="mt-1 block text-sm text-gray-600">Afbeelding, maximaal 5 MB.</span></label>
@@ -14,7 +14,7 @@
                     <div class="full"><button class="button">Groepsgegevens opslaan</button></div>
                 </form>
             @endif
-            @if(!$group->lifecycle_status)<form method="POST" action="{{ route('teacher.groups.students.store', $group) }}" class="teacher-add-student">@csrf
+            @if(!$group->lifecycle_status && !$previewOnly)<form method="POST" action="{{ route('teacher.groups.students.store', $group) }}" class="teacher-add-student">@csrf
                 <label>Student aan deze groep toevoegen
                     <span class="student-select-wrap">
                         <select name="student_id" required @disabled($availableStudents->isEmpty())>
@@ -28,7 +28,7 @@
                 </label>
                 <button type="submit" class="button" @disabled($availableStudents->isEmpty())>Toevoegen aan groep</button>
                 @if($availableStudents->isEmpty())<p class="full">Alle studenten zijn al aan een groep gekoppeld.</p>@endif
-            </form>@else<p>Dit is een vaste statusgroep. Studenten komen hierin via hun statusinstelling.</p>@endif
+            </form>@elseif($previewOnly)<p>Voorbeeldgroep ter inzage.</p>@else<p>Dit is een vaste statusgroep. Studenten komen hierin via hun statusinstelling.</p>@endif
         </section>
         <section class="panel">
             <div class="section-title"><div><p class="eyebrow">STUDENTEN</p><h2>Portfolio's in deze groep</h2></div></div>
