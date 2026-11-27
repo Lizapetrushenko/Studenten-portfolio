@@ -96,12 +96,12 @@
             </script>
         </section>
         <section class="panel" style="border:1px solid var(--accent)">
-            <div class="section-title"><div><p class="eyebrow">01 / KERNTAKEN</p><h2>Kerntaken beheren</h2></div><span class="count">{{ $program->coreTasks->count() }} kerntaken</span></div>
+            <div class="section-title"><div><p class="eyebrow">01 / KERNTAKEN</p><h2>Kerntakenlijst</h2></div><span class="count">{{ $program->coreTasks->count() }} kerntaken</span></div>
             <form method="GET" action="{{ route('admin.settings') }}" class="form-grid mb-5">
                 <label>Opleiding<select name="program">@foreach($programs as $option)<option value="{{ $option->id }}" @selected($option->id === $program->id)>{{ $option->name }}</option>@endforeach</select></label><div class="flex items-end"><button class="button">Openen</button></div>
             </form>
             <div class="overflow-x-auto"><table class="w-full text-left">
-                <thead><tr><th scope="col">Code</th><th scope="col">Naam kerntaak</th><th scope="col">Acties</th></tr></thead>
+                <thead><tr><th scope="col">ID</th><th scope="col">Kerntaak</th><th scope="col">KD_ID</th><th scope="col">KT 1</th><th scope="col">KT 2</th><th scope="col">Acties</th></tr></thead>
                 <tbody>@forelse($program->coreTasks as $task)
                     <tr><td><input form="task-{{ $task->id }}" name="task_number" value="{{ $task->task_number }}" maxlength="50" required aria-label="Code kerntaak"></td><td><input form="task-{{ $task->id }}" name="name" value="{{ $task->name }}" maxlength="255" required aria-label="Naam kerntaak"></td><td><div class="flex flex-wrap gap-2"><form id="task-{{ $task->id }}" method="POST" action="{{ route('admin.core-tasks.update', [$program, $task]) }}">@csrf @method('PATCH')<button class="button tiny-button">Opslaan</button></form><form method="POST" action="{{ route('admin.core-tasks.destroy', [$program, $task]) }}" data-confirm="Deze lege kerntaak verwijderen?">@csrf @method('DELETE')<button class="button secondary-button tiny-button">Verwijderen</button></form></div></td></tr>
                 @empty<tr><td colspan="3">Er zijn nog geen kerntaken voor deze opleiding.</td></tr>@endforelse</tbody>

@@ -6,9 +6,12 @@ use App\Support\StudentDocumentCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class Group extends Model
 {
@@ -18,6 +21,11 @@ class Group extends Model
     {
         static::saved(fn () => StudentDocumentCache::forgetStudentDirectory());
         static::deleted(fn () => StudentDocumentCache::forgetStudentDirectory());
+        static::creating(function (Group $group): void {
+            if (! $group->education_program_id) {
+                $group->education_program_id = EducationProgram::where('code', '25998')->value('id');
+            }
+        });
 
         static::deleting(function (Group $group) {
             if ($group->lifecycle_status !== null) {
@@ -30,16 +38,9 @@ class Group extends Model
 
     public function teacher(): BelongsTo { return $this->belongsTo(User::class, 'teacher_id'); }
     public function students(): BelongsToMany { return $this->belongsToMany(User::class)->where('users.role', '!=', 'test_account')->withTimestamps(); }
-    public function workProcesses(): HasManyThrough
+    public function workProcesses(): HasMany
     {
-        return $this->hasManyThrough(
-            WorkProcess::class,
-            CoreTask::class,
-            'education_program_id',
-            'core_task_id',
-            'education_program_id',
-            'id',
-        )->orderBy('number');
+        return $this->hasMany(GroupWorkProcess::class, 'group_id')->orderBy('number');
     }
 
     public function isLifecycle(string $status): bool

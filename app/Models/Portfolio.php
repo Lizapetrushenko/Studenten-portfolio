@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Portfolio extends Model
 {
-    protected $fillable = ['title', 'bio', 'study'];
+    protected $fillable = ['user_id','title', 'bio', 'study'];
 
     protected static function booted(): void
     {

@@ -64,6 +64,20 @@ class AdminController extends Controller
         $group = Group::create($data);
         $program = \App\Models\EducationProgram::where('name', 'Software Developer')->firstOrFail();
         $group->update(['education_program_id' => $program->id]);
+        foreach ($program->workProcesses()->orderBy('number')->get() as $process) {
+            \Illuminate\Support\Facades\DB::table('group_work_processes')->updateOrInsert(
+                ['id' => $process->id],
+                [
+                    'group_id' => $group->id,
+                    'core_task_id' => $process->core_task_id,
+                    'number' => $process->number,
+                    'name' => $process->name,
+                    'code' => $process->code,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+            );
+        }
         return back()->with('status', 'Groep aangemaakt.');
     }
 
@@ -108,13 +122,19 @@ class AdminController extends Controller
     {
         abort_unless($student->role === 'student', 404);
         $data = $request->validate([
-            'group_ids' => ['required', 'array', 'min:1'],
+            'group_ids' => ['present', 'array'],
             'group_ids.*' => ['integer', 'exists:groups,id'],
         ], [
-            'group_ids.required' => 'Selecteer minimaal één groep.',
-            'group_ids.min' => 'Selecteer minimaal één groep.',
+            'group_ids.present' => 'Selecteer minimaal één groep.',
         ]);
         $ids = $data['group_ids'] ?? [];
+        if ($ids === []) {
+            $student->groups()->sync([]);
+            $student->update(['group_id' => null]);
+            StudentDocumentCache::forgetStudentDirectory();
+
+            return back()->with('status', 'Groepslidmaatschappen opgeslagen.');
+        }
         $statusIds = Group::whereNotNull('lifecycle_status')->whereIn('id', $ids)->pluck('id')->all();
         abort_if(count($statusIds) > 1, 422, 'Kies maximaal één statusgroep.');
         $teachingGroupIds = Group::whereIn('id', $ids)->whereNull('lifecycle_status')->pluck('id')->all();

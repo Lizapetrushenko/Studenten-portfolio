@@ -20,16 +20,16 @@ class CoreReferenceDataSeeder extends Seeder
 
         $tasks = [
             ['task_number' => 'B1-K1', 'name' => 'Realiseert software', 'processes' => [
-                ['code' => 'B1-K1-W1', 'name' => 'Stemt opdracht af, plant werkzaamheden en bewaakt de voortgang'],
-                ['code' => 'B1-K1-W2', 'name' => 'Maakt een technisch ontwerp voor software'],
-                ['code' => 'B1-K1-W3', 'name' => 'Realiseert (onderdelen van) software'],
-                ['code' => 'B1-K1-W4', 'name' => 'Test software'],
-                ['code' => 'B1-K1-W5', 'name' => 'Doet verbetervoorstellen voor de software'],
+                ['code' => 'K1W1', 'name' => 'Stemt opdracht af, plant werkzaamheden en bewaakt de voortgang'],
+                ['code' => 'K1W2', 'name' => 'Maakt een technisch ontwerp voor software'],
+                ['code' => 'K1W3', 'name' => 'Realiseert (onderdelen van) software'],
+                ['code' => 'K1W4', 'name' => 'Test software'],
+                ['code' => 'K1W5', 'name' => 'Doet verbetervoorstellen voor de software'],
             ]],
             ['task_number' => 'B1-K2', 'name' => 'Voert ICT-projecten uit', 'processes' => [
-                ['code' => 'B1-K2-W1', 'name' => 'Werkt samen in een projectteam'],
-                ['code' => 'B1-K2-W2', 'name' => 'Presenteert het opgeleverde werk'],
-                ['code' => 'B1-K2-W3', 'name' => 'Evalueert de samenwerking'],
+                ['code' => 'K2W1', 'name' => 'Werkt samen in een projectteam'],
+                ['code' => 'K2W2', 'name' => 'Presenteert het opgeleverde werk'],
+                ['code' => 'K2W3', 'name' => 'Evalueert de samenwerking'],
             ]],
         ];
 
@@ -39,7 +39,11 @@ class CoreReferenceDataSeeder extends Seeder
             unset($taskData['processes']);
             $task = $program->coreTasks()->updateOrCreate(['task_number' => $taskData['task_number']], $taskData);
             foreach ($processes as $processData) {
-                $task->workProcesses()->updateOrCreate(['code' => $processData['code']], ['number' => $number++, ...$processData]);
+                $processNumber = $number++;
+                $task->workProcesses()->updateOrCreate(
+                    ['number' => $processNumber],
+                    ['code' => $processData['code'], 'name' => $processData['name']],
+                );
             }
         }
 

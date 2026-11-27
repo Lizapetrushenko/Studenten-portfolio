@@ -52,7 +52,7 @@ class AdminControllerTest extends TestCase
         $group = Group::where('name', 'Software 2A')->firstOrFail();
         $this->assertSame($teacher->id, $group->teacher_id);
         $this->assertCount(8, $group->workProcesses);
-        $this->assertSame('Afstemmen en plannen', $group->workProcesses->first()->name);
+        $this->assertSame('Stemt opdracht af, plant werkzaamheden en bewaakt de voortgang', $group->workProcesses->first()->name);
     }
 
     public function test_admin_cannot_assign_a_student_as_group_teacher(): void

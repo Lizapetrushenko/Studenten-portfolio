@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Database\Eloquent\Builder;
 
 class TeacherController extends Controller
 {
@@ -39,6 +40,7 @@ class TeacherController extends Controller
 
     public function workProcesses(Request $request): View
     {
+        abort(403);
         $groups = $request->user()->teachingGroups()->with('workProcesses')->orderBy('name')->get();
         return view('teacher.work-processes', compact('groups'));
     }
@@ -49,6 +51,12 @@ class TeacherController extends Controller
         $group = $request->user()->teachingGroups()->create($data);
         $program = \App\Models\EducationProgram::where('name', 'Software Developer')->firstOrFail();
         $group->update(['education_program_id' => $program->id]);
+        foreach ($program->workProcesses()->orderBy('number')->get() as $process) {
+            \Illuminate\Support\Facades\DB::table('group_work_processes')->updateOrInsert(
+                ['id' => $process->id],
+                ['group_id' => $group->id, 'core_task_id' => $process->core_task_id, 'number' => $process->number, 'name' => $process->name, 'code' => $process->code, 'created_at' => now(), 'updated_at' => now()],
+            );
+        }
         return back()->with('status', 'Groep aangemaakt.');
     }
 
@@ -141,9 +149,7 @@ class TeacherController extends Controller
     public function showGroupSettings(Request $request, Group $group): View
     {
         $this->authorizeGroup($request, $group);
-        abort_if($group->lifecycle_status !== null, 404);
-        $group->load('workProcesses');
-        return view('teacher.group-settings', compact('group'));
+        abort(403);
     }
 
     public function showPortfolio(Request $request, User $student): View
@@ -210,7 +216,7 @@ class TeacherController extends Controller
             'group_ids' => ['required', 'array', 'min:1'],
             'group_ids.*' => ['integer', 'exists:groups,id'],
             'reviewer_ids' => ['required', 'array', 'min:2'],
-            'reviewer_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')->where('role', 'teacher')],
+            'reviewer_ids.*' => ['integer', 'distinct'],
             'study_type' => ['required', 'in:BOL,BBL,Flex'],
         ], [
             'group_ids.required' => 'Selecteer minimaal één groep.',

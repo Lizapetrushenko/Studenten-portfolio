@@ -22,7 +22,11 @@ class MfaController extends Controller
             ? Crypt::decrypt($request->user()->mfa_secret)
             : ($request->session()->get('mfa_setup_secret') ?: $this->google2fa()->generateSecretKey());
         $request->session()->put('mfa_setup_secret', $secret);
-        $qrCode = $this->google2fa()->getQRCodeInline(config('app.name'), $request->user()->email, $secret, 220);
+        $google2fa = $this->google2fa();
+        if (method_exists($google2fa, 'getQrCodeService') && ! $google2fa->getQrCodeService()) {
+            $google2fa->setQrCodeService(new Bacon(new SvgImageBackEnd()));
+        }
+        $qrCode = $google2fa->getQRCodeInline(config('app.name'), $request->user()->email, $secret, 220);
         return view('auth.mfa-setup', compact('secret', 'qrCode'));
     }
 
@@ -70,12 +74,6 @@ class MfaController extends Controller
 
     private function google2fa(): Google2FA
     {
-        $google2fa = app(Google2FA::class);
-
-        if (! $google2fa->getQrCodeService()) {
-            $google2fa->setQrCodeService(new Bacon(new SvgImageBackEnd()));
-        }
-
-        return $google2fa;
+        return app(Google2FA::class);
     }
 }

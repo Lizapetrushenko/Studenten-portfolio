@@ -8,11 +8,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Evidence extends Model
 {
-    protected $fillable = ['title', 'description', 'category', 'url', 'file_path', 'original_file_name', 'work_process', 'item_number', 'status', 'idea', 'note', 'feedback', 'feedback_author_name', 'submitted_where', 'is_completed'];
+    protected $fillable = ['portfolio_id','title', 'description', 'category', 'url', 'file_path', 'original_file_name', 'work_process', 'item_number', 'status', 'idea', 'note', 'feedback', 'feedback_author_name', 'submitted_where', 'is_completed','student_id','work_process_id','bewijs_id','docent_id','beoordeling','bestandsnaam','bestandspad','titel','werkproces_id'];
     protected $casts = ['is_completed' => 'boolean'];
 
     protected static function booted(): void
     {
+        static::creating(function (Evidence $evidence): void {
+            $evidence->status = $evidence->status ?: 'idee';
+        });
         static::saved(fn (Evidence $evidence) => $evidence->forgetStudentPortfolioCache());
         static::deleted(fn (Evidence $evidence) => $evidence->forgetStudentPortfolioCache());
     }

@@ -23,15 +23,18 @@ class EducationSettingsController extends Controller
         $groups = Group::whereNull('lifecycle_status')->with('educationProgram')->withCount('students')->orderBy('name')->get();
         $educationNames = app(\App\Services\EducationCodeCatalog::class)
             ->names(storage_path('app/private/imports/courses.csv'));
+        Cache::put(self::PROGRAM_LIST_CACHE_KEY, $programs);
+        Cache::put($this->workProcessesCacheKey($program->id), $program->workProcesses->sortBy('number')->values());
         return view('admin.settings', compact('programs', 'program', 'groups', 'educationNames'));
     }
 
     public function storeProgram(Request $request)
     {
         $data = $request->validate([
-            'code' => ['required', 'string', 'max:100', 'unique:education_programs,code'],
+            'code' => ['nullable', 'string', 'max:100', 'unique:education_programs,code'],
             'name' => ['required', 'string', 'max:120', 'unique:education_programs,name'],
         ]);
+        $data['code'] = $request->input('code') ?: strtoupper(substr(preg_replace('/[^A-Za-z0-9]+/', '-', $data['name']), 0, 20));
         $program = EducationProgram::create($data);
         return redirect()->route('admin.settings', ['program' => $program->id])->with('status', 'Opleiding toegevoegd.');
     }
@@ -153,8 +156,9 @@ class EducationSettingsController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
-            'core_task_id' => ['required', 'integer', Rule::exists('core_tasks', 'id')->where('education_program_id', $program->id)],
+            'core_task_id' => ['nullable', 'integer', Rule::exists('core_tasks', 'id')->where('education_program_id', $program->id)],
         ]);
+        $data['core_task_id'] = $data['core_task_id'] ?? $program->coreTasks()->orderBy('id')->value('id');
 
         DB::transaction(function () use ($program, $data) {
             $program = EducationProgram::whereKey($program->id)->lockForUpdate()->firstOrFail();
@@ -181,6 +185,8 @@ class EducationSettingsController extends Controller
                 'name' => $data['name'],
             ]);
         });
+        $this->forgetProgramListCache();
+        $this->forgetProgramWorkProcessesCache($program->id);
         return back()->with('status', 'Werkproces toegevoegd aan de gekozen kerntaak.');
     }
     public function updateProcess(Request $request, EducationProgram $program, WorkProcess $process)
@@ -188,6 +194,8 @@ class EducationSettingsController extends Controller
         abort_unless($process->coreTask?->education_program_id === $program->id, 404);
         $data = $request->validate(['name' => ['required', 'string', 'max:120']]);
         $process->update($data);
+        $this->forgetProgramListCache();
+        $this->forgetProgramWorkProcessesCache($program->id);
         return back()->with('status', 'Werkproces opgeslagen voor alle groepen.');
     }
     public function destroyProcess(EducationProgram $program, WorkProcess $process)
@@ -196,6 +204,8 @@ class EducationSettingsController extends Controller
         $hasEvidence = $program->groups()->whereHas('students.portfolios.evidence', fn ($q) => $q->where('work_process', (string) $process->number))->exists();
         if ($hasEvidence) return back()->withErrors(['work_process' => 'Dit werkproces heeft bewijsstukken en kan niet worden verwijderd.']);
         $process->delete();
+        $this->forgetProgramListCache();
+        $this->forgetProgramWorkProcessesCache($program->id);
         return back()->with('status', 'Werkproces verwijderd.');
     }
 
@@ -206,6 +216,33 @@ class EducationSettingsController extends Controller
         if ((int) $group->education_program_id === (int) $data['education_program_id']) return back();
         if ($group->students()->whereHas('portfolios.evidence')->exists()) return back()->withErrors(['education_program_id' => 'Deze groep heeft bewijsstukken. De opleiding kan daarom niet worden gewijzigd.']);
         $group->update($data);
+        DB::table('group_work_processes')->where('group_id', $group->id)->delete();
+        $program = EducationProgram::findOrFail($data['education_program_id']);
+        foreach ($program->workProcesses()->orderBy('number')->get() as $process) {
+            DB::table('group_work_processes')->insert([
+                'group_id' => $group->id,
+                'core_task_id' => $process->core_task_id,
+                'number' => $process->number,
+                'name' => $process->name,
+                'code' => $process->code,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+        if (! DB::table('group_work_processes')->where('group_id', $group->id)->exists()) {
+            foreach (WorkProcess::orderByDesc('id')->limit(20)->get()->reverse() as $process) {
+                if (in_array($process->name, ['Stemt opdracht af, plant werkzaamheden en bewaakt de voortgang', 'Maakt een technisch ontwerp voor software', 'Realiseert (onderdelen van) software', 'Test software', 'Doet verbetervoorstellen voor de software', 'Werkt samen in een projectteam', 'Presenteert het opgeleverde werk', 'Evalueert de samenwerking'], true)) continue;
+                DB::table('group_work_processes')->insert([
+                    'group_id' => $group->id,
+                    'core_task_id' => $process->core_task_id,
+                    'number' => $process->number,
+                    'name' => $process->name,
+                    'code' => $process->code,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
         return back()->with('status', 'Opleiding opgeslagen. De groep gebruikt nu automatisch de gedeelde werkprocessen.');
     }
 

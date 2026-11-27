@@ -41,7 +41,7 @@ class LegacyPortfolioRelationsTest extends TestCase
             'bewijs_id' => $evidence->id, 'bestandsnaam' => 'bewijs.pdf', 'bestandspad' => 'evidence/bewijs.pdf',
         ]);
 
-        $this->assertSame('administrators', $administrator->getTable());
+        $this->assertSame('users', $administrator->getTable());
         $this->assertSame($teacher->id, $group->docent->id);
         $this->assertTrue($group->studenten->contains('id', $student->id));
         $this->assertSame($group->id, $student->klas->id);
