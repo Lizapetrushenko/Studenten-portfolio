@@ -37,6 +37,7 @@
                             @endforeach
                         </div>
                     </div>
+                    <p class="mt-2 text-sm text-gray-500">Selecteer minimaal één gewone lesgroep. De huidige statusgroep blijft behouden tenzij je een andere kiest.</p>
                     <button class="button tiny-button" type="submit">Groepen opslaan</button>
                 </form>
                 <label>Beoordelaars<input value="{{ $student->reviewers->pluck('name')->join(', ') ?: 'Nog niet gekoppeld' }}" disabled></label>

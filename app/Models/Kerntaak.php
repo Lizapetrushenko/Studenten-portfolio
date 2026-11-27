@@ -2,22 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-
-class Kerntaak extends Model
+/** @deprecated Use CoreTask; kept as a compatibility alias. */
+class Kerntaak extends CoreTask
 {
-    protected $table = 'portfolio_core_tasks';
-    protected $fillable = ['kwalificatiedossier_id', 'naam'];
-
-    public function kwalificatiedossier(): BelongsTo
-    {
-        return $this->belongsTo(Kwalificatiedossier::class);
-    }
-
-    public function werkprocessen(): HasMany
-    {
-        return $this->hasMany(Werkproces::class);
-    }
+    protected $table = 'core_tasks';
 }
