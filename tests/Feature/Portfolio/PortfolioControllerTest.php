@@ -4,6 +4,7 @@ namespace Tests\Feature\Portfolio;
 
 use App\Models\Group;
 use App\Models\User;
+use App\Support\StudentDocumentCache;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -12,6 +13,29 @@ use Tests\TestCase;
 class PortfolioControllerTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_portfolio_cache_is_refreshed_when_evidence_changes(): void
+    {
+        $student = User::factory()->create(['role' => 'student']);
+        $this->assertNull(StudentDocumentCache::portfolioForStudent($student->id));
+
+        $portfolio = $student->portfolios()->create(['title' => 'Portfolio', 'study' => 'BOL']);
+        $this->assertSame($portfolio->id, StudentDocumentCache::portfolioForStudent($student->id)->id);
+
+        $this->assertCount(0, StudentDocumentCache::portfolioForStudent($student->id)->evidence);
+
+        $evidence = $portfolio->evidence()->create([
+            'title' => 'Bewijs', 'status' => 'ingeleverd', 'work_process' => '1',
+            'category' => 'Project', 'item_number' => 1,
+        ]);
+        $this->assertSame('Bewijs', StudentDocumentCache::portfolioForStudent($student->id)->evidence->first()->title);
+
+        $evidence->update(['title' => 'Bijgewerkt bewijs']);
+        $this->assertSame('Bijgewerkt bewijs', StudentDocumentCache::portfolioForStudent($student->id)->evidence->first()->title);
+
+        $evidence->delete();
+        $this->assertCount(0, StudentDocumentCache::portfolioForStudent($student->id)->evidence);
+    }
 
     public function test_student_can_create_and_update_portfolio(): void
     {

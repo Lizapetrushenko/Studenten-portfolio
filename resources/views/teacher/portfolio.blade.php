@@ -1,8 +1,7 @@
 <x-app-layout headerTitle="Portfolio van {{ $student->name }}">
     <div class="portal-shell space-y-6 teacher-portfolio-page">
         <a href="{{ route('teacher.students.show', $student) }}" class="teacher-link back-button">← Terug naar studentgegevens</a>
-        @if (session('status'))<div class="panel" role="status">{{ session('status') }}</div>@endif
-        @if ($errors->any())<div class="panel text-red-700">{{ $errors->first() }}</div>@endif
+        @if ($errors->any())<div x-data="{ visible: true }" x-init="setTimeout(() => visible = false, 5000)" x-show="visible" x-transition.opacity role="alert" aria-live="assertive" class="panel text-red-700">{{ $errors->first() }}</div>@endif
         <section class="panel">
             <p class="eyebrow">STUDENTPORTFOLIO</p><h2>{{ $portfolio->title }}</h2><p>{{ $student->displayName() }} · {{ $student->email }} · {{ $student->student_number }} · {{ $student->study_type ?: $portfolio->study }}</p>
             @if($portfolio->bio)<p class="mt-3">{{ $portfolio->bio }}</p>@endif
@@ -37,7 +36,7 @@
                             </div>
                         @endif
                         @if($canReview && !in_array($item->status, ['akkoord', 'idee'], true))<form method="POST" action="{{ route('teacher.evidence.review', $item) }}" class="form-grid">@csrf @method('PATCH')
-                            <label>Beoordeling<select name="status" required><option value="">Kies een beoordeling</option><option value="akkoord" @selected($item->status === 'akkoord')>Akkoord</option><option value="niet akkoord" @selected($item->status === 'niet akkoord')>Niet akkoord</option></select></label>
+                            <label>Beoordeling<select name="status" required><option value="">Kies een beoordeling</option><option value="nakijken" @selected($item->status === 'nakijken')>Nakijken</option><option value="akkoord" @selected($item->status === 'akkoord')>Akkoord</option><option value="niet akkoord" @selected($item->status === 'niet akkoord')>Niet akkoord</option></select></label>
                             <label>Notitie docent<textarea name="feedback" rows="2" maxlength="2000">{{ $item->feedback }}</textarea></label>
                             <div class="full"><button class="button">Beoordeling opslaan</button></div>
                         </form>@elseif($item->status === 'akkoord')<p class="font-semibold text-green-700">Dit bewijsstuk is akkoord en vergrendeld.</p>@elseif(!$canReview)<p class="text-gray-600">Je bent niet gekoppeld als beoordelaar en kunt dit bewijsstuk niet beoordelen.</p>@endif

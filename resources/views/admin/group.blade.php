@@ -1,7 +1,7 @@
 <x-app-layout headerTitle="Groep {{ $group->name }}">
     <div class="portal-shell space-y-6">
         <a href="{{ route('admin.dashboard') }}" class="teacher-link back-button">← Terug naar instellingen</a>
-        @if ($errors->any())<div class="panel text-red-700">{{ $errors->first() }}</div>@endif
+        @if ($errors->any())<div x-data="{ visible: true }" x-init="setTimeout(() => visible = false, 5000)" x-show="visible" x-transition.opacity role="alert" aria-live="assertive" class="panel text-red-700">{{ $errors->first() }}</div>@endif
 
         <section class="panel">
             <div class="section-title"><div><p class="eyebrow">GROEP BEHEREN</p><h2>{{ $group->name }}</h2></div><span class="count">{{ $group->students->count() }} studenten</span></div>

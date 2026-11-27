@@ -13,6 +13,8 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
+        $this->call(CoreReferenceDataSeeder::class);
+
         User::firstOrCreate(
             ['email' => 'test@example.com'],
             [

@@ -2,16 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-
-class Kwalificatiedossier extends Model
+/** @deprecated Use EducationProgram; kept as a compatibility alias. */
+class Kwalificatiedossier extends EducationProgram
 {
-    protected $table = 'portfolio_qualification_dossiers';
-    protected $fillable = ['code', 'naam'];
-
-    public function kerntaken(): HasMany
-    {
-        return $this->hasMany(Kerntaak::class);
-    }
+    protected $table = 'education_programs';
 }

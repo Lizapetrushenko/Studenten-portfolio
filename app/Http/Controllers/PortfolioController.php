@@ -4,30 +4,39 @@ namespace App\Http\Controllers;
 
 use App\Models\Evidence;
 use App\Models\Portfolio;
+use App\Support\StudentDocumentCache;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Throwable;
 
 class PortfolioController extends Controller
 {
     public function index(Request $request): View
     {
         abort_unless($request->user()->isStudent(), 403);
-        $student = $request->user()->load('groups.workProcesses');
-        $portfolio = $student->portfolios()->with('evidence')->first();
-        $processCollection = $student->groups->whereNull('lifecycle_status')->flatMap->workProcesses->unique('number')->sortBy('number');
+        $student = $request->user()->load('groups.workProcesses.coreTask');
+        $portfolio = StudentDocumentCache::portfolioForStudent($student->id);
+        // A student's active group membership determines the available curriculum.
+        // Requiring a linked teacher here hides work processes for valid group members.
+        $workGroups = $student->groups->filter(fn ($group) => $group->lifecycle_status === null);
+        $processCollection = $workGroups->flatMap->workProcesses->unique('number')->sortBy('number');
         $processes = $processCollection->map(fn ($process) => [
             'code' => (string) $process->number,
+            'work_process_code' => $process->code ?: (string) $process->number,
             'name' => $process->name,
             'label' => $process->number . '. ' . $process->name,
-            'kerntaak' => $process->number <= 5 ? 'K1' : 'K2',
-            'work_label' => 'W' . ($process->number <= 5 ? $process->number : $process->number - 5),
+            'kerntaak' => $process->coreTask?->task_number ?? 'Overig',
+            'kerntaak_name' => $process->coreTask?->name ?? 'Overige kerntaken',
+            'work_label' => preg_match('/W(\d+)$/', (string) $process->code, $match) ? 'W' . $match[1] : 'W' . $process->number,
         ])->values()->all();
 
         $spinChartData = $this->prepareSpinChartData($portfolio, $processes);
         $overallStatusCounts = $this->prepareOverallStatusCounts($portfolio);
-        $hasGroup = $student->groups->contains(fn ($group) => $group->lifecycle_status === null);
+        $hasGroup = $workGroups->isNotEmpty();
         $portfolioLocked = $student->portfolioIsLocked();
         $submitOnly = $student->canOnlySubmitEvidence();
 
@@ -119,14 +128,25 @@ class PortfolioController extends Controller
         ]);
         abort_unless($request->user()->groups()->whereNull('lifecycle_status')->whereHas('workProcesses', fn ($query) => $query->where('number', $validated['work_process']))->exists(), 422, 'Dit werkproces hoort niet bij jouw groep.');
 
+        $storedPath = null;
         if ($request->hasFile('file')) {
             $file = $request->file('file');
-            $validated['file_path'] = $file->store('evidence', 'local');
+            $storedPath = $file->store('evidence', 'local');
+            if (! is_string($storedPath) || $storedPath === '' || ! Storage::disk('local')->exists($storedPath)) {
+                if (is_string($storedPath) && $storedPath !== '') Storage::disk('local')->delete($storedPath);
+                throw ValidationException::withMessages(['file' => 'Het bestand kon niet worden opgeslagen. Probeer het opnieuw.']);
+            }
+            $validated['file_path'] = $storedPath;
             $validated['original_file_name'] = mb_substr($file->getClientOriginalName(), 0, 255);
         }
         unset($validated['file']);
         $validated['item_number'] = $portfolio->evidence()->where('work_process', $validated['work_process'])->count() + 1;
-        $portfolio->evidence()->create($validated);
+        try {
+            DB::transaction(fn () => $portfolio->evidence()->create($validated));
+        } catch (Throwable $exception) {
+            if ($storedPath) Storage::disk('local')->delete($storedPath);
+            throw $exception;
+        }
 
         return back()->with('status', 'Bewijsstuk toegevoegd.');
     }
@@ -144,13 +164,16 @@ class PortfolioController extends Controller
             'is_completed' => ['nullable', 'boolean'],
             'file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,doc,docx', 'max:5120'],
         ]);
+        $oldFilePath = $evidence->file_path;
+        $storedPath = null;
         if ($request->hasFile('file')) {
-            if ($evidence->file_path) {
-                Storage::disk('local')->delete($evidence->file_path);
-                Storage::disk('public')->delete($evidence->file_path);
-            }
             $file = $request->file('file');
-            $validated['file_path'] = $file->store('evidence', 'local');
+            $storedPath = $file->store('evidence', 'local');
+            if (! is_string($storedPath) || $storedPath === '' || ! Storage::disk('local')->exists($storedPath)) {
+                if (is_string($storedPath) && $storedPath !== '') Storage::disk('local')->delete($storedPath);
+                throw ValidationException::withMessages(['file' => 'Het nieuwe bestand kon niet worden opgeslagen. Het bestaande bestand is behouden.']);
+            }
+            $validated['file_path'] = $storedPath;
             $validated['original_file_name'] = mb_substr($file->getClientOriginalName(), 0, 255);
         }
         unset($validated['file']);
@@ -158,7 +181,16 @@ class PortfolioController extends Controller
         if ($evidence->status === 'nakijken' && $validated['status'] === 'ingeleverd') {
             $validated['status'] = 'nakijken';
         }
-        $evidence->update($validated);
+        try {
+            DB::transaction(fn () => $evidence->update($validated));
+        } catch (Throwable $exception) {
+            if ($storedPath) Storage::disk('local')->delete($storedPath);
+            throw $exception;
+        }
+        if ($storedPath && $oldFilePath) {
+            Storage::disk('local')->delete($oldFilePath);
+            Storage::disk('public')->delete($oldFilePath);
+        }
 
         return back()->with('status', 'Bewijsplan opgeslagen.');
     }
@@ -193,7 +225,11 @@ class PortfolioController extends Controller
             && in_array($evidence->status, ['ingeleverd', 'akkoord', 'niet akkoord'], true)
             && ($student->groups()->where('teacher_id', $user->id)->exists()
                 || $student->reviewers()->whereKey($user->id)->exists());
-        abort_unless($isOwner || $teacherCanSeeEvidence, 404);
+        $testTeacherCanSeeOwnEvidence = $user->canSwitchTestRole()
+            && $user->isTeacher()
+            && $evidence->portfolio->user_id === $user->id
+            && in_array($evidence->status, ['ingeleverd', 'akkoord', 'niet akkoord', 'nakijken'], true);
+        abort_unless($isOwner || $teacherCanSeeEvidence || $testTeacherCanSeeOwnEvidence, 404);
         abort_unless($evidence->file_path, 404);
 
         $disk = Storage::disk('local')->exists($evidence->file_path) ? 'local' : 'public';

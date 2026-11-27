@@ -1,9 +1,29 @@
 <x-app-layout headerTitle="Mijn portfolio">
+    @php
+        $testStudent = auth()->user()->canSwitchTestRole() && auth()->user()->isStudent() ? config('test_account.student', []) : [];
+    @endphp
     <div class="portal-shell portfolio-page">
             <div class="portfolio-sections">
                 <section class="panel portfolio-panel {{ !$portfolio ? 'portfolio-panel-empty' : '' }}" x-data="{ editing: false }">
                     <div class="section-title"><div><p class="eyebrow">01 / PROFIEL</p><h2>Portfolio-informatie</h2></div><div class="flex items-center gap-3"><span class="tag">{{ $portfolio ? 'Actief' : 'Start hier' }}</span>@if($portfolio && !$portfolioLocked && !$submitOnly)<button type="button" class="button tiny-button" @click.prevent="editing = !editing" x-text="editing ? 'Annuleren' : 'Aanpassen'"></button>@endif</div></div>
                     
+                    @if (!empty($testStudent['name']) || !empty($testStudent['number']))
+                        <dl class="portfolio-info">
+                            @if (!empty($testStudent['name']))
+                                <div class="info-item">
+                                    <dt class="info-label">Student</dt>
+                                    <dd class="info-value">{{ $testStudent['name'] }}</dd>
+                                </div>
+                            @endif
+                            @if (!empty($testStudent['number']))
+                                <div class="info-item">
+                                    <dt class="info-label">Studentnummer</dt>
+                                    <dd class="info-value">{{ $testStudent['number'] }}</dd>
+                                </div>
+                            @endif
+                        </dl>
+                    @endif
+
                     @if($portfolio)
                         <!-- Portfolio Bestaande Info -->
                         <div class="portfolio-info" x-show="!editing">
@@ -13,7 +33,7 @@
                             </div>
                             <div class="info-item">
                                 <label class="info-label">Leerweg:</label>
-                                <p class="info-value">{{ auth()->user()->leerweg ?: 'Nog niet ingesteld' }}</p>
+                                <p class="info-value">{{ $testStudent['study_path'] ?? (auth()->user()->leerweg ?: 'Nog niet ingesteld') }}</p>
                             </div>
                             <div class="info-item">
                                 <label class="info-label">Korte introductie:</label>
@@ -34,7 +54,7 @@
                         @if(!$portfolioLocked)
                         <form method="POST" action="{{ route('portfolio.store') }}" class="form-grid portfolio-form">@csrf
                             <label>Projectnaam<input name="title" value="{{ old('title') }}" placeholder="Schrijf zelf je projectnaam" required></label>
-                            <label>Leerweg<input value="{{ auth()->user()->leerweg ?: 'Nog niet ingesteld' }}" readonly></label>
+                            <label>Leerweg<input value="{{ $testStudent['study_path'] ?? (auth()->user()->leerweg ?: 'Nog niet ingesteld') }}" readonly></label>
                             <label class="full">Korte introductie<textarea name="bio" rows="3" placeholder="Waar ben je trots op?">{{ old('bio') }}</textarea></label>
                             <div class="full"><button class="button" type="submit">Portfolio opslaan</button></div>
                         </form>
@@ -50,7 +70,7 @@
                         <div class="section-title"><div><p class="eyebrow">03 / OVERZICHT</p><h2>Van je werkzaamheden</h2></div></div>
                         @if(count($processes))
                             <div class="spin-chart-widget-small">
-                                <div class="spin-chart-container-small" data-chart-data="{{ $spinChartData }}" data-chart-labels="{{ json_encode(collect($processes)->map(fn ($process) => $process['kerntaak'] . $process['work_label'])->values()) }}">
+                                <div class="spin-chart-container-small" data-chart-data="{{ $spinChartData }}" data-chart-labels="{{ json_encode(collect($processes)->pluck('work_process_code')->values()) }}">
                                     <canvas id="spinChart"></canvas>
                                 </div>
                                 <div class="spin-legend-small" aria-label="Legenda status bewijsstukken">
@@ -71,8 +91,8 @@
         $kerntaken = collect($processes)->groupBy('kerntaak');
         $requestedProcess = (string) request('werkproces', '');
         $requestedProcessData = collect($processes)->firstWhere('code', $requestedProcess);
-        $selectedKerntaak = $requestedProcessData['kerntaak'] ?? (request('kerntaak') === 'K2' ? 'K2' : 'K1');
-        if (!$kerntaken->has($selectedKerntaak)) $selectedKerntaak = $kerntaken->keys()->first() ?? 'K1';
+        $requestedKerntaak = (string) request('kerntaak', '');
+        $selectedKerntaak = $requestedProcessData['kerntaak'] ?? ($kerntaken->has($requestedKerntaak) ? $requestedKerntaak : ($kerntaken->keys()->first() ?? ''));
         $activeProcessCode = $requestedProcessData['code'] ?? ($kerntaken->get($selectedKerntaak)?->first()['code'] ?? '');
         @endphp
         <div class="evidence-plan evidence-plan-shell" x-data="{ selectedKerntaak: @js($selectedKerntaak), selectedProcess: @js((string) $activeProcessCode) }">
@@ -84,10 +104,11 @@
                         type="button"
                         id="kerntaak-tab-{{ $kerntaak }}"
                         role="tab"
+                        aria-label="{{ $kerntaak }} — {{ $taskProcesses->first()['kerntaak_name'] }}"
                         aria-controls="work-process-tabs-{{ $kerntaak }}"
                         :aria-selected="selectedKerntaak === '{{ $kerntaak }}'"
                         :class="selectedKerntaak === '{{ $kerntaak }}' ? 'kerntaak-tab is-active' : 'kerntaak-tab'"
-                        @click="selectedKerntaak = '{{ $kerntaak }}'; selectedProcess = '{{ $taskProcesses->first()['code'] }}'; const url = new URL(window.location.href); url.searchParams.set('kerntaak', selectedKerntaak); url.searchParams.set('werkproces', selectedProcess); window.history.replaceState({}, '', url)">{{ $kerntaak }}</button>
+                        @click="selectedKerntaak = '{{ $kerntaak }}'; selectedProcess = '{{ $taskProcesses->first()['code'] }}'; const url = new URL(window.location.href); url.searchParams.set('kerntaak', selectedKerntaak); url.searchParams.set('werkproces', selectedProcess); window.history.replaceState({}, '', url)">{{ \Illuminate\Support\Str::after($kerntaak, '-') }}</button>
                     @endforeach
                 </div>
                 <div class="process-main">
@@ -123,7 +144,7 @@
                             aria-labelledby="work-process-tab-{{ $process['code'] }}"
                             x-show="selectedProcess === '{{ $process['code'] }}'"
                             x-cloak>
-                            <h3>{{ $process['kerntaak'] }}{{ $process['work_label'] }} — {{ $process['name'] }} <span class="process-count">{{ $items->count() }} bewijsstukken</span></h3>
+                            <h3>{{ $process['work_process_code'] }} — {{ $process['name'] }} <span class="process-count">{{ $items->count() }} bewijsstukken</span></h3>
                             @forelse ($items as $item)
                             <form method="POST" action="{{ route('evidence.update', $item) }}" class="plan-row" enctype="multipart/form-data" x-data="{ evidenceStatus: @js($item->status === 'nakijken' ? 'ingeleverd' : $item->status) }">@csrf @method('PATCH')
                                 <div class="plan-number">{{ $item->item_number }}</div>

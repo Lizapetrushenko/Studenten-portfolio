@@ -1,8 +1,7 @@
 <x-app-layout headerTitle="Studentgegevens · {{ $student->displayName() }}">
     <div class="portal-shell space-y-6 student-profile-page">
         <a href="{{ route('teacher.students.index') }}" class="teacher-link back-button">← Terug naar studentenoverzicht</a>
-        @if (session('status'))<div class="panel" role="status">{{ session('status') }}</div>@endif
-        @if ($errors->any())<div class="panel text-red-700">{{ $errors->first() }}</div>@endif
+        @if ($errors->any())<div x-data="{ visible: true }" x-init="setTimeout(() => visible = false, 5000)" x-show="visible" x-transition.opacity role="alert" aria-live="assertive" class="panel text-red-700">{{ $errors->first() }}</div>@endif
 
         <section class="panel">
             <div class="section-title"><div><p class="eyebrow">STUDENTGEGEVENS · ALLEEN INZIEN</p><h2>{{ $student->displayName() }}</h2></div>@if($student->portfolios->isNotEmpty())<a class="button" href="{{ route('teacher.students.portfolio', $student) }}">Portfolio bekijken</a>@endif</div>
@@ -54,7 +53,7 @@
                     @else
                         <p>Er zijn geen groepen beschikbaar om aan deze student te koppelen.</p>
                     @endif
-                    <p class="mt-2 text-sm text-gray-500">Selecteer precies één statusgroep. Een student kan daarnaast lid zijn van meerdere groepen.</p>
+                    <p class="mt-2 text-sm text-gray-500">Selecteer minimaal één gewone lesgroep. Nieuwe studenten krijgen automatisch de statusgroep NIEUW; die blijft behouden totdat je een andere statusgroep kiest.</p>
                     <x-input-error :messages="$errors->get('group_ids')" />
                 </fieldset>
                 @php

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\StudentDocumentCache;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
@@ -20,6 +21,9 @@ class User extends Authenticatable implements MustVerifyEmail
 
     protected static function booted(): void
     {
+        static::saved(fn (User $user) => StudentDocumentCache::forgetStudent($user->id));
+        static::deleted(fn (User $user) => StudentDocumentCache::forgetStudent($user->id));
+
         static::saving(function (User $user) {
             $user->education = ($user->role ?? 'student') === 'student' ? ($user->education ?: 'Software Developer') : null;
         });
@@ -109,19 +113,44 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Group::class, 'teacher_id');
     }
 
+    public const TEST_ROLES = [
+        'student' => 'Student',
+        'teacher' => 'Docent',
+        'admin' => 'Beheerder',
+    ];
+
+    public function canSwitchTestRole(): bool
+    {
+        return app()->environment('local', 'testing')
+            && $this->role === 'test_account'
+            && $this->getKey() !== null
+            && (string) $this->getKey() === (string) config('test_account.user_id');
+    }
+
+    public function effectiveRole(): ?string
+    {
+        if (! $this->canSwitchTestRole() || ! request()->hasSession() || request()->user() !== $this) {
+            return $this->role;
+        }
+
+        $role = request()->session()->get('test_account.role');
+
+        return is_string($role) && isset(self::TEST_ROLES[$role]) ? $role : $this->role;
+    }
+
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->effectiveRole() === 'admin';
     }
 
     public function isTeacher(): bool
     {
-        return $this->role === 'teacher';
+        return $this->effectiveRole() === 'teacher';
     }
 
     public function isStudent(): bool
     {
-        return $this->role === 'student';
+        return $this->effectiveRole() === 'student';
     }
 
     /**
@@ -136,10 +165,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'role',
-        'group_id',
         'first_name',
         'last_name',
         'preferred_name',
+        'group_id',
         'student_number',
         'education',
         'study_type',

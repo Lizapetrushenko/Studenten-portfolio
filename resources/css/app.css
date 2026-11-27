@@ -533,30 +533,37 @@ select:focus {
 }
 
 .process-layout {
+    position: relative;
     display: grid;
-    grid-template-columns: 3.5rem minmax(0, 1fr);
-    gap: .35rem;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: .7rem;
     align-items: start;
 }
 
 .kerntaak-tabs {
-    position: relative;
+    grid-column: 1;
+    grid-row: 2;
+    position: absolute;
+    left: -3.2rem;
+    top: 2.95rem;
     z-index: 2;
     display: flex;
     flex-direction: column;
-    gap: .35rem;
-    padding-top: 2.95rem;
-    transform: translateX(calc(-100% - .5rem));
+    gap: .4rem;
+    padding-top: 0;
 }
 
 .kerntaak-tab {
-    min-height: 2.8rem;
-    border: 1px solid #c8cdd1;
-    border-radius: .75rem 0 0 .75rem;
+    min-height: 2.5rem;
+    padding: .45rem .35rem;
+    border: 1px solid var(--line);
+    border-radius: .7rem;
     color: var(--ink);
     background: #fff;
-    font: 600 .78rem 'DM Sans', sans-serif;
+    font: 600 .78rem/1.2 'DM Sans', sans-serif;
+    text-align: center;
     cursor: pointer;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
 }
 
 .kerntaak-tab:hover {
@@ -564,8 +571,9 @@ select:focus {
 }
 
 .kerntaak-tab.is-active {
-    background: #d1d5d8;
-    border-color: #aeb5ba;
+    color: #fff;
+    background: var(--ink);
+    border-color: var(--ink);
 }
 
 .kerntaak-tab:focus-visible {
@@ -574,11 +582,13 @@ select:focus {
 }
 
 .process-content {
+    grid-column: 2;
+    grid-row: 1;
     min-width: 0;
 }
 
 .process-main {
-    min-width: 0;
+    display: contents;
 }
 
 .process-tabs {
@@ -587,11 +597,12 @@ select:focus {
     max-width: 100%;
     overflow-x: auto;
     padding: 0 .15rem .2rem;
-    border-bottom: 1px solid var(--line);
     scrollbar-width: thin;
 }
 
 .process-panel {
+    grid-column: 1 / -1;
+    grid-row: 2;
     border: 1px solid var(--accent);
     width: 100%;
     margin-left: 0;
@@ -599,9 +610,9 @@ select:focus {
 }
 
 .process-main > .process-panel {
-    width: calc(100% + 3.85rem);
-    margin-left: -3.85rem;
-    padding-left: calc(1.7rem + 3.85rem);
+    width: 100%;
+    margin-left: 0;
+    padding-left: 1.7rem;
 }
 
 .process-panel > .section-title {
@@ -629,9 +640,9 @@ select:focus {
 }
 
 .process-tab.is-active {
-    background: #d1d5d8;
-    border-color: #aeb5ba;
-    color: #17211f;
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
 }
 
 .process-tab:focus-visible {
@@ -842,7 +853,7 @@ select:focus {
 
 .plan-row {
     display: grid;
-    grid-template-columns: 35px minmax(190px, 1fr) 180px;
+    grid-template-columns: 35px repeat(2, minmax(0, 1fr));
     gap: .8rem 1rem;
     align-items: start;
     border-top: 1px solid var(--line);
@@ -879,6 +890,7 @@ select:focus {
 }
 
 .plan-fields select {
+    width: 100%;
     padding: .55rem;
     font-size: .78rem;
     font-weight: 700;
@@ -2010,15 +2022,18 @@ select:focus {
     }
 
     .kerntaak-tabs {
+        position: relative;
+        left: auto;
+        top: auto;
         flex-direction: row;
         padding-top: 0;
-        transform: none;
+        flex-wrap: wrap;
     }
 
     .kerntaak-tab {
-        min-width: 3.25rem;
-        min-height: 2.5rem;
-        border-radius: .75rem .75rem 0 0;
+        flex: 0 0 auto;
+        min-width: 3rem;
+        min-height: 2.3rem;
     }
 
     .portfolio-sections {

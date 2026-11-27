@@ -4,7 +4,7 @@
             <p class="deltion-kicker">EXTRA BEVEILIGING</p>
             <h1 class="auth-title">MFA instellen</h1>
             @if (auth()->user()->mfa_enabled)
-                <div role="status" aria-live="polite" style="margin: 1.25rem 0; padding: 1rem; border: 1px solid #15803d; border-radius: .5rem; background: #f0fdf4; color: #166534;">
+                <div x-data="{ visible: true }" x-init="setTimeout(() => visible = false, 5000)" x-show="visible" x-transition.opacity role="status" aria-live="polite" style="margin: 1.25rem 0; padding: 1rem; border: 1px solid #15803d; border-radius: .5rem; background: #f0fdf4; color: #166534;">
                     <strong>MFA is ingeschakeld.</strong>
                     <p>Je account is beveiligd. Bij je volgende login vul je de code uit je authenticator-app in.</p>
                 </div>
@@ -12,7 +12,7 @@
             @else
             <p class="auth-subtitle">Scan deze QR-code met je authenticator-app en vul daarna de 6-cijferige code in.</p>
             @if ($errors->has('code'))
-                <div role="alert" style="margin: 1rem 0; padding: 1rem; border: 1px solid #b91c1c; border-radius: .5rem; background: #fef2f2; color: #991b1b;">
+                <div x-data="{ visible: true }" x-init="setTimeout(() => visible = false, 5000)" x-show="visible" x-transition.opacity role="alert" aria-live="assertive" style="margin: 1rem 0; padding: 1rem; border: 1px solid #b91c1c; border-radius: .5rem; background: #fef2f2; color: #991b1b;">
                     {{ $errors->first('code') }}
                 </div>
             @endif
