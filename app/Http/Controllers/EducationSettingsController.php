@@ -5,32 +5,49 @@ use App\Models\EducationWorkProcess;
 use App\Models\Group;
 use App\Models\GroupWorkProcess;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class EducationSettingsController extends Controller
 {
+    private const PROGRAM_LIST_CACHE_KEY = 'education-program:list';
+
     public function index(Request $request)
     {
-        $programs = EducationProgram::withCount('workProcesses')->orderBy('name')->get();
+        $programs = Cache::remember(self::PROGRAM_LIST_CACHE_KEY, now()->addMinutes(10), function () {
+            return EducationProgram::withCount('workProcesses')->orderBy('name')->get();
+        });
+
         $program = $request->filled('program') ? EducationProgram::findOrFail($request->query('program')) : EducationProgram::where('name', 'Software Developer')->firstOrFail();
-        $program->load('workProcesses');
+        $program->setRelation('workProcesses', Cache::remember(
+            $this->workProcessesCacheKey($program->id),
+            now()->addMinutes(10),
+            fn () => $program->workProcesses()->get()
+        ));
         $groups = Group::whereNull('lifecycle_status')->with('educationProgram')->withCount('students')->orderBy('name')->get();
         return view('admin.settings', compact('programs', 'program', 'groups'));
     }
+
     public function storeProgram(Request $request)
     {
         $program = EducationProgram::create($request->validate(['name' => ['required', 'string', 'max:120', 'unique:education_programs,name']]));
+        $this->forgetProgramListCache();
+
         return redirect()->route('admin.settings', ['program' => $program->id])->with('status', 'Opleiding toegevoegd. Voeg nu de werkprocessen toe.');
     }
+
     public function updateProgram(Request $request, EducationProgram $program)
     {
         $data = $request->validate(['name' => ['required', 'string', 'max:120', Rule::unique('education_programs')->ignore($program->id)]]);
         // The standard program stays available for automatic registration and new groups.
         if ($program->name === 'Software Developer' && $data['name'] !== $program->name) abort(422, 'Software Developer is de standaardopleiding en kan niet worden hernoemd.');
         $program->update($data);
+        $this->forgetProgramListCache();
+
         return back()->with('status', 'Opleiding opgeslagen.');
     }
+
     public function storeProcess(Request $request, EducationProgram $program)
     {
         $data = $request->validate(['name' => ['required', 'string', 'max:120']]);
@@ -40,8 +57,12 @@ class EducationSettingsController extends Controller
             $program->workProcesses()->create(['number' => $number, ...$data]);
             foreach ($program->groups()->get() as $group) $group->workProcesses()->create(['number' => $number, ...$data]);
         });
+        $this->forgetProgramListCache();
+        $this->forgetProgramWorkProcessesCache($program->id);
+
         return back()->with('status', 'Werkproces toegevoegd aan de opleiding en de gekoppelde groepen.');
     }
+
     public function updateProcess(Request $request, EducationProgram $program, EducationWorkProcess $process)
     {
         abort_unless($process->education_program_id === $program->id, 404);
@@ -50,8 +71,11 @@ class EducationSettingsController extends Controller
             $process->update($data);
             foreach ($program->groups()->get() as $group) $group->workProcesses()->updateOrCreate(['number' => $process->number], $data);
         });
+        $this->forgetProgramWorkProcessesCache($program->id);
+
         return back()->with('status', 'Werkproces opgeslagen voor alle gekoppelde groepen.');
     }
+
     public function destroyProcess(EducationProgram $program, EducationWorkProcess $process)
     {
         abort_unless($process->education_program_id === $program->id, 404);
@@ -61,8 +85,12 @@ class EducationSettingsController extends Controller
             GroupWorkProcess::whereIn('group_id', $program->groups()->select('id'))->where('number', $process->number)->delete();
             $process->delete();
         });
+        $this->forgetProgramListCache();
+        $this->forgetProgramWorkProcessesCache($program->id);
+
         return back()->with('status', 'Werkproces verwijderd.');
     }
+
     public function assignProgram(Request $request, Group $group)
     {
         abort_if($group->lifecycle_status !== null, 404);
@@ -76,5 +104,21 @@ class EducationSettingsController extends Controller
             foreach ($program->workProcesses as $process) $group->workProcesses()->create(['number' => $process->number, 'name' => $process->name]);
         });
         return back()->with('status', 'Opleiding en werkprocessen ingesteld voor deze groep.');
+    }
+
+    // Keep the cached program names and work-process counts in sync after edits.
+    private function forgetProgramListCache(): void
+    {
+        Cache::forget(self::PROGRAM_LIST_CACHE_KEY);
+    }
+
+    private function forgetProgramWorkProcessesCache(int $programId): void
+    {
+        Cache::forget($this->workProcessesCacheKey($programId));
+    }
+
+    private function workProcessesCacheKey(int $programId): string
+    {
+        return "education-program:{$programId}:work-processes";
     }
 }
