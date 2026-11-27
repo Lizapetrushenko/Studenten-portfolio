@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Group;
 use App\Models\User;
+use App\Support\StudentDocumentCache;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class GroupProgressTest extends TestCase
@@ -28,6 +30,36 @@ class GroupProgressTest extends TestCase
         $this->get($url.'?zoek=onbekend')->assertOk()->assertSee('Geen studenten gevonden met deze filters.')->assertDontSee('Plan document');
         $this->get($url.'?zoek=anna&status=ingeleverd')->assertOk()->assertSee('Plan document')->assertDontSee('Akkoord document');
         $this->get($url.'?status=Idee')->assertSessionHasErrors('status');
+    }
+
+    public function test_teacher_group_pages_cache_and_refresh_student_evidence(): void
+    {
+        $teacher = User::factory()->create(['role' => 'teacher']);
+        $group = $teacher->teachingGroups()->create(['name' => 'SD2B']);
+        $student = User::factory()->create(['role' => 'student']);
+        $group->students()->attach($student);
+        $portfolio = $student->portfolios()->create(['title' => 'Portfolio', 'study' => 'BBL']);
+        $evidence = $portfolio->evidence()->create([
+            'title' => 'Bewijsstuk',
+            'status' => 'ingeleverd',
+            'work_process' => '1',
+            'category' => 'Project',
+            'item_number' => 1,
+        ]);
+        $cacheKey = "students:{$student->id}:portfolio";
+
+        $this->actingAs($teacher)->get(route('teacher.groups.show', $group))->assertOk();
+        $this->assertTrue(Cache::has($cacheKey));
+
+        Cache::forget($cacheKey);
+        $this->get(route('teacher.groups.progress', $group))->assertOk();
+        $this->assertTrue(Cache::has($cacheKey));
+
+        $evidence->update(['title' => 'Bijgewerkt bewijsstuk']);
+        $this->assertFalse(Cache::has($cacheKey));
+        $this->get(route('teacher.groups.progress', $group))->assertOk();
+        $this->assertTrue(Cache::has($cacheKey));
+        $this->assertSame('Bijgewerkt bewijsstuk', StudentDocumentCache::portfolioForStudent($student->id)->evidence->first()->title);
     }
 
     public function test_created_evidence_is_grey_and_turns_orange_after_student_submits(): void

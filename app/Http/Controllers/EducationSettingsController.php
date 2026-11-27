@@ -5,6 +5,7 @@ use App\Models\CoreTask;
 use App\Models\WorkProcess;
 use App\Models\Group;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
@@ -12,6 +13,8 @@ use Illuminate\Validation\ValidationException;
 
 class EducationSettingsController extends Controller
 {
+    private const PROGRAM_LIST_CACHE_KEY = 'education-program:list';
+
     public function index(Request $request)
     {
         $programs = EducationProgram::withCount('workProcesses')->orderBy('id')->get();
@@ -22,6 +25,7 @@ class EducationSettingsController extends Controller
             ->names(storage_path('app/private/imports/courses.csv'));
         return view('admin.settings', compact('programs', 'program', 'groups', 'educationNames'));
     }
+
     public function storeProgram(Request $request)
     {
         $data = $request->validate([
@@ -31,6 +35,7 @@ class EducationSettingsController extends Controller
         $program = EducationProgram::create($data);
         return redirect()->route('admin.settings', ['program' => $program->id])->with('status', 'Opleiding toegevoegd.');
     }
+
     public function updateProgram(Request $request, EducationProgram $program)
     {
         $data = $request->validate([
@@ -40,6 +45,8 @@ class EducationSettingsController extends Controller
         // The standard program stays available for automatic registration and new groups.
         if ($program->name === 'Software Developer' && $data['name'] !== $program->name) abort(422, 'Software Developer is de standaardopleiding en kan niet worden hernoemd.');
         $program->update($data);
+        $this->forgetProgramListCache();
+
         return back()->with('status', 'Opleiding opgeslagen.');
     }
     public function savePrograms(Request $request)
@@ -191,6 +198,7 @@ class EducationSettingsController extends Controller
         $process->delete();
         return back()->with('status', 'Werkproces verwijderd.');
     }
+
     public function assignProgram(Request $request, Group $group)
     {
         abort_if($group->lifecycle_status !== null, 404);
@@ -199,5 +207,21 @@ class EducationSettingsController extends Controller
         if ($group->students()->whereHas('portfolios.evidence')->exists()) return back()->withErrors(['education_program_id' => 'Deze groep heeft bewijsstukken. De opleiding kan daarom niet worden gewijzigd.']);
         $group->update($data);
         return back()->with('status', 'Opleiding opgeslagen. De groep gebruikt nu automatisch de gedeelde werkprocessen.');
+    }
+
+    // Keep the cached program names and work-process counts in sync after edits.
+    private function forgetProgramListCache(): void
+    {
+        Cache::forget(self::PROGRAM_LIST_CACHE_KEY);
+    }
+
+    private function forgetProgramWorkProcessesCache(int $programId): void
+    {
+        Cache::forget($this->workProcessesCacheKey($programId));
+    }
+
+    private function workProcessesCacheKey(int $programId): string
+    {
+        return "education-program:{$programId}:work-processes";
     }
 }

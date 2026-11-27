@@ -4,6 +4,7 @@ use App\Models\EducationProgram;
 use App\Models\Group;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class EducationSettingsTest extends TestCase
@@ -22,6 +23,44 @@ class EducationSettingsTest extends TestCase
         $this->get(route('admin.settings', ['tab' => 'kerntaken', 'program' => $program->id]))
             ->assertOk()->assertSee('Kerntakenlijst')->assertSeeInOrder(['ID', 'Kerntaak', 'KD_ID', 'KT 1', 'KT 2'])->assertDontSee('Nieuw werkproces');
         $this->get(route('admin.dashboard'))->assertOk()->assertSee('Opleidingen en werkprocessen')->assertDontSee('Admin dashboard');
+    }
+
+    public function test_program_and_work_process_caches_are_invalidated_after_edits(): void
+    {
+        $program = EducationProgram::where('name', 'Software Developer')->firstOrFail();
+        $admin = User::factory()->create(['role' => 'admin', 'mfa_enabled' => true]);
+        $this->actingAs($admin)->get(route('admin.settings'))->assertOk();
+
+        $cachedPrograms = Cache::get('education-program:list');
+        $workProcessesCacheKey = "education-program:{$program->id}:work-processes";
+        $cachedWorkProcesses = Cache::get($workProcessesCacheKey);
+        $this->assertSame(8, $cachedPrograms->firstWhere('id', $program->id)->work_processes_count);
+        $this->assertCount(8, $cachedWorkProcesses);
+
+        $this->post(route('admin.processes.store', $program), ['name' => 'Nieuw werkproces'])
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertNull(Cache::get('education-program:list'));
+        $this->assertNull(Cache::get($workProcessesCacheKey));
+
+        $this->get(route('admin.settings'))->assertOk();
+        $cachedPrograms = Cache::get('education-program:list');
+        $cachedWorkProcesses = Cache::get($workProcessesCacheKey);
+        $this->assertSame(9, $cachedPrograms->firstWhere('id', $program->id)->work_processes_count);
+        $this->assertCount(9, $cachedWorkProcesses);
+
+        $newProcess = $program->workProcesses()->where('number', 9)->firstOrFail();
+        $this->patch(route('admin.processes.update', [$program, $newProcess]), ['name' => 'Bijgewerkt werkproces'])
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertNull(Cache::get($workProcessesCacheKey));
+
+        $this->get(route('admin.settings'))->assertOk();
+        $cachedWorkProcesses = Cache::get($workProcessesCacheKey);
+        $this->assertSame('Bijgewerkt werkproces', $cachedWorkProcesses->firstWhere('id', $newProcess->id)->name);
+
+        $this->delete(route('admin.processes.destroy', [$program, $newProcess]))
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertNull(Cache::get('education-program:list'));
+        $this->assertNull(Cache::get($workProcessesCacheKey));
     }
 
     public function test_teacher_cannot_access_or_change_work_process_settings(): void

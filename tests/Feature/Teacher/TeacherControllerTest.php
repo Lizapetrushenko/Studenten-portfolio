@@ -4,6 +4,7 @@ namespace Tests\Feature\Teacher;
 
 use App\Models\Group;
 use App\Models\User;
+use App\Support\StudentDocumentCache;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -76,6 +77,23 @@ class TeacherControllerTest extends TestCase
 
         $this->assertTrue($student->fresh()->groups->contains('id', $group->id));
         $this->assertFalse($anotherTeacher->fresh()->groups->contains('id', $group->id));
+    }
+
+    public function test_adding_student_to_group_invalidates_cached_student_directory(): void
+    {
+        $teacher = User::factory()->create(['role' => 'teacher']);
+        $firstGroup = $teacher->teachingGroups()->create(['name' => 'Klas A']);
+        $secondGroup = $teacher->teachingGroups()->create(['name' => 'Klas B']);
+        $student = User::factory()->create(['role' => 'student', 'group_id' => $firstGroup->id]);
+        $student->groups()->sync([$firstGroup->id]);
+
+        StudentDocumentCache::studentDirectory();
+
+        $this->actingAs($teacher)->post(route('teacher.groups.students.store', $secondGroup), ['student_id' => $student->id])
+            ->assertRedirect()->assertSessionHasNoErrors();
+
+        $cachedStudent = StudentDocumentCache::studentDirectory()->firstWhere('id', $student->id);
+        $this->assertTrue($cachedStudent->groups->contains('id', $secondGroup->id));
     }
 
     public function test_teacher_can_update_student_group_study_and_reviewers(): void

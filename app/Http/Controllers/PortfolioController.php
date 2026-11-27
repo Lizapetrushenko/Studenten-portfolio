@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Evidence;
 use App\Models\Portfolio;
+use App\Support\StudentDocumentCache;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,7 @@ class PortfolioController extends Controller
     {
         abort_unless($request->user()->isStudent(), 403);
         $student = $request->user()->load('groups.workProcesses.coreTask');
-        $portfolio = $student->portfolios()->with('evidence')->first();
+        $portfolio = StudentDocumentCache::portfolioForStudent($student->id);
         // A student's active group membership determines the available curriculum.
         // Requiring a linked teacher here hides work processes for valid group members.
         $workGroups = $student->groups->filter(fn ($group) => $group->lifecycle_status === null);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Support\StudentDocumentCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -16,7 +17,7 @@ class PortfolioApiController extends Controller
             return response()->json(['message' => 'Deze API is bedoeld voor studentaccounts.'], 403);
         }
 
-        $portfolio = $user->portfolios()->with('evidence')->first();
+        $portfolio = StudentDocumentCache::portfolioForStudent($user->id);
 
         if (! $portfolio) {
             return response()->json(['message' => 'Je hebt nog geen portfolio.'], 404);

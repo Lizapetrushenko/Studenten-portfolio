@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\StudentDocumentCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
@@ -15,6 +16,9 @@ class Group extends Model
 
     protected static function booted(): void
     {
+        static::saved(fn () => StudentDocumentCache::forgetStudentDirectory());
+        static::deleted(fn () => StudentDocumentCache::forgetStudentDirectory());
+
         static::deleting(function (Group $group) {
             if ($group->lifecycle_status !== null) {
                 throw ValidationException::withMessages(['group' => 'Vaste statusgroepen kunnen niet worden verwijderd.']);

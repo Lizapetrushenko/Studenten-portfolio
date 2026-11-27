@@ -6,7 +6,8 @@ use App\Models\Evidence;
 use App\Models\Group;
 use App\Models\Portfolio;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Builder;
+use App\Support\StudentDocumentCache;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -60,6 +61,7 @@ class TeacherController extends Controller
         abort_unless($student->isStudent(), 422, 'Alleen studenten kunnen aan een groep worden toegevoegd.');
         $student->groups()->syncWithoutDetaching([$group->id]);
         if (! $student->group_id) $student->update(['group_id' => $group->id]);
+        StudentDocumentCache::forgetStudentDirectory();
         return back()->with('status', 'Student aan de groep toegevoegd.');
     }
 
@@ -70,6 +72,8 @@ class TeacherController extends Controller
         foreach ($group->students as $student) {
             $this->loadTestPortfolio($request->user(), $student);
         }
+        $group->load(['students.reviewers', 'workProcesses']);
+        $this->loadCachedStudentPortfolios($group->students);
         $availableStudents = User::where('role', 'student')->whereDoesntHave('groups', fn ($query) => $query->whereKey($group->id))->orderBy('last_name')->orderBy('first_name')->get();
         $previewOnly = $this->canPreviewTestGroup($request->user(), $group);
         return view('teacher.group', compact('group', 'availableStudents', 'previewOnly'));
@@ -85,7 +89,8 @@ class TeacherController extends Controller
         $search = trim($filters['zoek'] ?? '');
         $status = $filters['status'] ?? '';
         $statuses = ['niet ingeleverd' => 'Nog niet ingeleverd', 'niet akkoord' => 'Niet akkoord', 'ingeleverd' => 'Ingeleverd', 'akkoord' => 'Akkoord', 'nakijken' => 'Nakijken'];
-        $group->load(['workProcesses', 'students.portfolios.evidence', 'students.groups.workProcesses', 'students.reviewers']);
+        $group->load(['workProcesses', 'students.groups.workProcesses', 'students.reviewers']);
+        $this->loadCachedStudentPortfolios($group->students);
         $processes = $group->isTeacherLinked()
             ? $group->workProcesses
             : $group->students->flatMap(fn ($student) => $student->groups->filter(fn ($studentGroup) => $studentGroup->isTeacherLinked())->flatMap->workProcesses)->unique('number')->sortBy('number')->values();
@@ -102,6 +107,15 @@ class TeacherController extends Controller
 
         return view('teacher.group-progress', compact('group', 'processes', 'rows', 'search', 'status', 'statuses'));
     }
+
+    private function loadCachedStudentPortfolios(Collection $students): void
+    {
+        foreach ($students as $student) {
+            $portfolio = StudentDocumentCache::portfolioForStudent($student->id);
+            $student->setRelation('portfolios', $student->newCollection($portfolio ? [$portfolio] : []));
+        }
+    }
+
     public function updateGroup(Request $request, Group $group): RedirectResponse
     {
         $this->authorizeGroup($request, $group);
@@ -136,10 +150,8 @@ class TeacherController extends Controller
     {
         abort_unless($student->isStudent(), 404);
         $student->load(['groups.workProcesses', 'reviewers']);
-        $student->load('portfolios.evidence');
-        $this->loadTestPortfolio($request->user(), $student);
-        $portfolio = $student->portfolios->first();
-        abort_if($portfolio === null, 404);
+        $portfolio = StudentDocumentCache::portfolioForStudent($student->id);
+        abort_if(! $portfolio, 404);
         $workProcesses = $student->groups->filter(fn ($group) => $group->isTeacherLinked())->flatMap->workProcesses->unique('number')->sortBy('number');
         $teachers = User::where('role', 'teacher')->orderBy('name')->get();
         $teacherGroups = $request->user()->teachingGroups()->orderBy('name')->get();
@@ -152,8 +164,9 @@ class TeacherController extends Controller
     public function showStudent(Request $request, User $student): View
     {
         abort_unless($student->isStudent(), 404);
-        $student->load(['groups', 'reviewers', 'portfolios.evidence']);
-        $this->loadTestPortfolio($request->user(), $student);
+        $student->load(['groups', 'reviewers']);
+        $portfolio = StudentDocumentCache::portfolioForStudent($student->id);
+        $student->setRelation('portfolios', $student->newCollection($portfolio ? [$portfolio] : []));
         $teachers = User::where('role', 'teacher')->orderBy('name')->get();
         $groups = Group::orderBy('name')->get();
         return view('teacher.student-profile', compact('student', 'teachers', 'groups'));
@@ -186,9 +199,7 @@ class TeacherController extends Controller
 
     public function students(Request $request): View
     {
-        $students = User::where('role', 'student')
-            ->with(['groups', 'reviewers'])
-            ->orderBy('last_name')->orderBy('first_name')->get();
+        $students = StudentDocumentCache::studentDirectory();
         return view('teacher.students', compact('students'));
     }
 
@@ -224,6 +235,7 @@ class TeacherController extends Controller
         $student->reviewers()->sync($reviewerIds);
         $student->update(['group_id' => $selectedGroups[0], 'study_type' => $data['study_type'], 'leerweg' => strtoupper($data['study_type'])]);
         $student->portfolios()->update(['study' => $data['study_type']]);
+        StudentDocumentCache::forgetStudent($student->id);
         return redirect()->route('teacher.students.show', $student)->with('status', 'Studentgegevens opgeslagen.');
     }
 
